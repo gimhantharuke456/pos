@@ -1,0 +1,277 @@
+import React, { useEffect, useState } from "react";
+import { Table, Button, Modal, message, Select, InputNumber, Row } from "antd";
+import orderService from "../services/orderService";
+import OrderForm from "../components/OrderForm";
+import {
+  DeleteOutlined,
+  EyeFilled,
+  MoneyCollectOutlined,
+} from "@ant-design/icons";
+
+const Orders = () => {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentOrder, setCurrentOrder] = useState(null);
+  const [viewOrderItems, setViewOrderItems] = useState(null);
+  const [updatePaidAmountModalVisible, setUpdatePaidAmountModalVisible] =
+    useState(false);
+  const [selectedOrderForPaidAmount, setSelectedOrderForPaidAmount] =
+    useState(null);
+  const [newPaidAmount, setNewPaidAmount] = useState(0);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await orderService.getAllOrders();
+        setOrders(data);
+      } catch (error) {
+        message.error("Failed to fetch orders");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
+  const handleCreateOrder = () => {
+    setCurrentOrder(null);
+    setIsModalVisible(true);
+  };
+
+  const handleDeleteOrder = async (id) => {
+    try {
+      await orderService.deleteOrder(id);
+      setOrders((prevOrders) => prevOrders.filter((order) => order.id !== id));
+      message.success("Order deleted successfully");
+    } catch (error) {
+      message.error("Failed to delete order");
+    }
+  };
+
+  const handleSubmitOrder = async (order) => {
+    try {
+      if (currentOrder) {
+        await orderService.updateOrder(currentOrder.id, order);
+        setOrders((prevOrders) =>
+          prevOrders.map((o) => (o.id === currentOrder.id ? order : o))
+        );
+        message.success("Order updated successfully");
+      } else {
+        await orderService.createOrder(order);
+        const data = await orderService.getAllOrders();
+        setOrders(data);
+        message.success("Order created successfully");
+      }
+      setIsModalVisible(false);
+    } catch (error) {
+      message.error("Failed to submit order");
+    }
+  };
+
+  const showOrderItemsModal = (order) => {
+    setViewOrderItems(order.items);
+  };
+
+  const showUpdatePaidAmountModal = (order) => {
+    setSelectedOrderForPaidAmount(order);
+    setNewPaidAmount(0);
+    setUpdatePaidAmountModalVisible(true);
+  };
+
+  const handleUpdatePaidAmount = async () => {
+    if (selectedOrderForPaidAmount) {
+      try {
+        await orderService.updatePaidAmount(
+          selectedOrderForPaidAmount.id,
+          newPaidAmount
+        );
+        const updatedOrders = orders.map((order) =>
+          order.id === selectedOrderForPaidAmount.id
+            ? {
+                ...order,
+                paidAmount: order.paidAmount + newPaidAmount,
+                outstandingAmount: order.outstandingAmount - newPaidAmount,
+              }
+            : order
+        );
+        setOrders(updatedOrders);
+        setUpdatePaidAmountModalVisible(false);
+        message.success("Paid amount updated successfully");
+      } catch (error) {
+        message.error("Failed to update paid amount");
+      }
+    }
+  };
+
+  const handleUpdatePaymentStatus = async (orderId, status) => {
+    try {
+      await orderService.updatePaymentStatus(orderId, status);
+      const updatedOrders = orders.map((order) =>
+        order.id === orderId ? { ...order, paymentStatus: status } : order
+      );
+      setOrders(updatedOrders);
+      message.success("Payment status updated successfully");
+    } catch (error) {
+      message.error("Failed to update payment status");
+    }
+  };
+
+  const columns = [
+    {
+      title: "Customer Name",
+      dataIndex: "customerName",
+      key: "customerName",
+    },
+    {
+      title: "Order Date",
+      dataIndex: "orderDate",
+      key: "orderDate",
+    },
+    {
+      title: "Payment Method",
+      dataIndex: "paymentMethod",
+      key: "paymentMethod",
+    },
+    {
+      title: "Total Amount",
+      dataIndex: "totalAmount",
+      key: "totalAmount",
+    },
+    {
+      title: "Paid Amount",
+      dataIndex: "paidAmount",
+      key: "paidAmount",
+    },
+    {
+      title: "Outstanding Amount",
+      dataIndex: "outstandingAmount",
+      key: "outstandingAmount",
+    },
+    {
+      title: "Payment Status",
+      dataIndex: "paymentStatus",
+      key: "paymentStatus",
+      render: (text, record) => (
+        <Select
+          value={text}
+          onChange={(value) => handleUpdatePaymentStatus(record.id, value)}
+        >
+          <Select.Option value="pending">Pending</Select.Option>
+          <Select.Option value="accepted">Accepted</Select.Option>
+          <Select.Option value="partially paid">Partially Paid</Select.Option>
+        </Select>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Row>
+          <Button
+            onClick={() => showOrderItemsModal(record)}
+            style={{ marginRight: 10 }}
+            icon={<EyeFilled />}
+          />
+          <Button
+            onClick={() => showUpdatePaidAmountModal(record)}
+            style={{ marginRight: 10 }}
+            icon={<MoneyCollectOutlined />}
+          />
+          <Button
+            icon={<DeleteOutlined />}
+            danger
+            onClick={() => handleDeleteOrder(record.id)}
+          />
+        </Row>
+      ),
+    },
+  ];
+
+  return (
+    <div>
+      <Button type="primary" onClick={handleCreateOrder}>
+        Create Order
+      </Button>
+      <Table
+        columns={columns}
+        dataSource={orders}
+        rowKey="id"
+        loading={loading}
+        style={{ marginTop: 20 }}
+      />
+      <Modal
+        width={800}
+        title={currentOrder ? "Edit Order" : "Create Order"}
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+      >
+        <OrderForm onSubmit={handleSubmitOrder} initialValues={currentOrder} />
+      </Modal>
+      <Modal
+        width={400}
+        title="Update Paid Amount"
+        open={updatePaidAmountModalVisible}
+        onCancel={() => setUpdatePaidAmountModalVisible(false)}
+        onOk={handleUpdatePaidAmount}
+      >
+        <InputNumber
+          min={0}
+          value={newPaidAmount}
+          onChange={(value) => setNewPaidAmount(value)}
+          style={{ width: "100%" }}
+        />
+      </Modal>
+      <Modal
+        width={800}
+        title="Order Items"
+        open={viewOrderItems !== null}
+        onCancel={() => setViewOrderItems(null)}
+        footer={null}
+      >
+        <Table
+          columns={[
+            {
+              title: "Item Name",
+              dataIndex: "itemName",
+              key: "itemName",
+            },
+            {
+              title: "Quantity",
+              dataIndex: "quantity",
+              key: "quantity",
+            },
+            {
+              title: "Item Price",
+              dataIndex: "itemPrice",
+              key: "itemPrice",
+            },
+            {
+              title: "Discount (%)",
+              dataIndex: "itemDiscount",
+              key: "itemDiscount",
+            },
+            {
+              title: "Total Price",
+              dataIndex: "itemPrice",
+              key: "totalPrice",
+              render: (text, record) => (
+                <>
+                  {record.itemPrice *
+                    record.quantity *
+                    (1 - record.itemDiscount / 100)}
+                </>
+              ),
+            },
+          ]}
+          dataSource={viewOrderItems}
+          rowKey="id"
+          pagination={false}
+        />
+      </Modal>
+    </div>
+  );
+};
+
+export default Orders;
