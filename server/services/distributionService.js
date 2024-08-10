@@ -36,6 +36,19 @@ const distributionService = {
 
     return distribution;
   },
+  getDistributionByItemId: (id) => {
+    const distribution = db
+      .prepare(
+        `SELECT d.*, i.itemName, s.name as supplierName
+         FROM distributions d
+         JOIN items i ON d.itemId = i.id
+         JOIN suppliers s ON i.supplierId = s.id
+         WHERE d.itemId = ?`
+      )
+      .get(id);
+
+    return distribution;
+  },
 
   getAllDistributions: () => {
     return db

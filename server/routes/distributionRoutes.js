@@ -19,10 +19,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get a specific distribution
-router.get("/:id", (req, res) => {
+// Get a specific item distribution
+router.get("/item/:id", (req, res) => {
   try {
-    const distribution = distributionService.getDistributionById(req.params.id);
+    const distribution = distributionService.getDistributionByItemId(
+      req.params.id
+    );
     if (distribution) {
       res.json(distribution);
     } else {

@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Form, Select, Button, DatePicker, InputNumber } from "antd";
-import moment from "moment"; // Import moment
+import {
+  Form,
+  Button,
+  DatePicker,
+  Input,
+  Table,
+  InputNumber,
+  Select,
+} from "antd";
+import moment from "moment";
 import supplierService from "../services/supplierService";
 import { getAllItems } from "../services/itemService";
-
-const { Option } = Select;
+import InstockAmount from "./InstockAmount";
 
 const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
   const [form] = Form.useForm();
@@ -18,7 +25,6 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
 
   useEffect(() => {
     if (initialValues) {
-      // Convert the orderDate string to a moment object
       const formattedInitialValues = {
         ...initialValues,
         orderDate: initialValues.orderDate
@@ -47,20 +53,65 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
     }
   };
 
-  const handleSubmit = (values) => {
-    // Convert the moment object back to a string before submitting
+  const handleSubmit = async (values) => {
     const formattedValues = {
       ...values,
       orderDate: values.orderDate
         ? values.orderDate.format("YYYY-MM-DD")
         : null,
       status: "PENDING",
+      items: items
+        .filter((item) => item.quantity > 0)
+        .map((item) => ({
+          itemId: item.id,
+          quantity: item.quantity,
+        })),
     };
-    onSubmit(formattedValues);
+    await onSubmit(formattedValues);
+    setItems([]);
   };
+
+  const columns = [
+    { title: "Item Code", dataIndex: "itemCode", key: "itemCode" },
+    { title: "Item Name", dataIndex: "itemName", key: "itemName" },
+    {
+      title: "Instock Amount",
+      dataIndex: "inStockAmount",
+      key: "inStockAmount",
+      render: (_, record) => {
+        return <InstockAmount id={record.id} />;
+      },
+    },
+    { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
+
+    {
+      title: "Quantity",
+      dataIndex: "quantity",
+      key: "quantity",
+      render: (_, record) => (
+        <InputNumber
+          min={0}
+          defaultValue={0}
+          onChange={(value) => {
+            const updatedItems = items.map((item) =>
+              item.id === record.id ? { ...item, quantity: value } : item
+            );
+            setItems(updatedItems);
+          }}
+        />
+      ),
+    },
+  ];
 
   return (
     <Form form={form} onFinish={handleSubmit} layout="vertical">
+      <Form.Item
+        name="purchaseOrderCode"
+        label="Purchase Order Code"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
       <Form.Item
         name="supplierId"
         label="Supplier"
@@ -68,9 +119,9 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
       >
         <Select>
           {suppliers.map((supplier) => (
-            <Option key={supplier.id} value={supplier.id}>
+            <Select.Option key={supplier.id} value={supplier.id}>
               {supplier.name}
-            </Option>
+            </Select.Option>
           ))}
         </Select>
       </Form.Item>
@@ -81,38 +132,12 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
       >
         <DatePicker />
       </Form.Item>
-      <Form.List name="items">
-        {(fields, { add, remove }) => (
-          <>
-            {fields.map((field, index) => (
-              <div key={field.key}>
-                <Form.Item
-                  name={[field.name, "itemId"]}
-                  label={`Item ${index + 1}`}
-                  rules={[{ required: true }]}
-                >
-                  <Select>
-                    {items.map((item) => (
-                      <Option key={item.id} value={item.id}>
-                        {item.itemName}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-                <Form.Item
-                  name={[field.name, "quantity"]}
-                  label="Quantity"
-                  rules={[{ required: true }]}
-                >
-                  <InputNumber min={1} />
-                </Form.Item>
-                <Button onClick={() => remove(field.name)}>Remove</Button>
-              </div>
-            ))}
-            <Button onClick={() => add()}>Add Item</Button>
-          </>
-        )}
-      </Form.List>
+      <Table
+        dataSource={items}
+        columns={columns}
+        rowKey="id"
+        pagination={false}
+      />
       <Form.Item>
         <Button type="primary" htmlType="submit">
           Submit

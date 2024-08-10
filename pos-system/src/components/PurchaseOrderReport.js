@@ -30,6 +30,25 @@ const PurchaseOrderReport = ({ purchaseOrderId }) => {
     { title: "Item", dataIndex: "itemName", key: "item" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
     { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
+    { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
+    {
+      title: "Second Price",
+      dataIndex: "secondPrice",
+      key: "abc",
+      render: (_, record) => {
+        return (
+          <span>
+            {record.unitPrice -
+              (record.unitPrice * record.discountPercentage1) / 100}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Wholesale Price",
+      dataIndex: "wholesalePrice",
+      key: "wholesalePrice",
+    },
     {
       title: "Total",
       key: "total",

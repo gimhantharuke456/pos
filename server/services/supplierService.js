@@ -4,7 +4,9 @@ const db = initializeDb();
 
 const supplierService = {
   getAllSuppliers() {
-    return db.prepare("SELECT * FROM suppliers").all();
+    return db
+      .prepare("SELECT * FROM suppliers WHERE deleteStatus is FALSE")
+      .all();
   },
 
   getSupplierByName(name) {
@@ -14,24 +16,24 @@ const supplierService = {
   },
 
   addSupplier(supplier) {
-    const { name, contactNumber, address, email } = supplier;
+    const { name, contactNumber, address, email, supplierCode } = supplier;
     const info = db
       .prepare(
-        "INSERT INTO suppliers (name, contactNumber, address, email) VALUES (?, ?, ?, ?)"
+        "INSERT INTO suppliers (name, contactNumber, address, email,supplierCode) VALUES (?, ?, ?, ?,?)"
       )
-      .run(name, contactNumber, address, email);
+      .run(name, contactNumber, address, email, supplierCode);
     return info.lastInsertRowid;
   },
 
   updateSupplier(id, supplier) {
-    const { name, contactNumber, address, email } = supplier;
+    const { name, contactNumber, address, email, supplierCode } = supplier;
     db.prepare(
-      "UPDATE suppliers SET name = ?, contactNumber = ?, address = ?, email = ? WHERE id = ?"
-    ).run(name, contactNumber, address, email, id);
+      "UPDATE suppliers SET name = ?, contactNumber = ?, address = ?, email = ?, supplierCode = ? WHERE id = ?"
+    ).run(name, contactNumber, address, email, supplierCode, id);
   },
 
   deleteSupplier(id) {
-    db.prepare("DELETE FROM suppliers WHERE id = ?").run(id);
+    db.prepare("UPDATE suppliers SET deleteStatus = TRUE WHERE id = ?").run(id);
   },
 };
 

@@ -31,16 +31,17 @@ const CustomerManagement = () => {
     }
   };
 
-  const handleAddOrEdit = (values) => {
+  const handleAddOrEdit = async (values) => {
     if (editingCustomer) {
       // Update customer
-      customerService
+      await customerService
         .updateCustomer(
           editingCustomer.id,
           values.name,
           values.contactNumber,
           values.address,
-          values.email
+          values.email,
+          values.customerCode
         )
         .then(() => {
           message.success("Customer updated successfully");
@@ -51,12 +52,13 @@ const CustomerManagement = () => {
         });
     } else {
       // Create new customer
-      customerService
+      await customerService
         .createCustomer(
           values.name,
           values.contactNumber,
           values.address,
-          values.email
+          values.email,
+          values.customerCode
         )
         .then(() => {
           message.success("Customer created successfully");
@@ -90,6 +92,11 @@ const CustomerManagement = () => {
   };
 
   const columns = [
+    {
+      title: "Customer Code",
+      dataIndex: "customerCode",
+      key: "customerCode",
+    },
     {
       title: "Name",
       dataIndex: "name",
@@ -138,7 +145,7 @@ const CustomerManagement = () => {
 
       <Modal
         title={editingCustomer ? "Edit Customer" : "Add Customer"}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
           setEditingCustomer(null);
@@ -147,6 +154,15 @@ const CustomerManagement = () => {
         footer={null}
       >
         <Form form={form} onFinish={handleAddOrEdit}>
+          <Form.Item
+            name="customerCode"
+            label="Customer Code"
+            rules={[
+              { required: true, message: "Please input the customer code!" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
           <Form.Item
             name="name"
             label="Name"

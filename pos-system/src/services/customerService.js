@@ -3,8 +3,14 @@ import axios from "axios";
 const API_URL = "/api/customers"; // Adjust if needed
 
 const customerService = {
-  createCustomer: (name, contactNumber, address, email) => {
-    return axios.post(API_URL, { name, contactNumber, address, email });
+  createCustomer: async (name, contactNumber, address, email, customerCode) => {
+    return await axios.post(API_URL, {
+      name,
+      contactNumber,
+      address,
+      email,
+      customerCode,
+    });
   },
 
   getCustomerById: (id) => {

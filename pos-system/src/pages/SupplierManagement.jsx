@@ -112,6 +112,11 @@ const SupplierManagement = () => {
 
   const columns = [
     {
+      title: "Supplier Code",
+      dataIndex: "supplierCode",
+      key: "supplierCode",
+    },
+    {
       title: "Name",
       dataIndex: "name",
       key: "name",
@@ -196,6 +201,15 @@ const SupplierManagement = () => {
           layout="vertical"
           onFinish={handleAddOrUpdateSupplier}
         >
+          <Form.Item
+            label="Supplier Code"
+            name="supplierCode"
+            rules={[
+              { required: true, message: "Please input the supplier code!" },
+            ]}
+          >
+            <Input placeholder="Name" />
+          </Form.Item>
           <Form.Item
             label="Name"
             name="name"

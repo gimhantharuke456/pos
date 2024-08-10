@@ -1,102 +1,167 @@
 import React, { useState, useEffect } from "react";
-import { Select, InputNumber, Button, Form, Row } from "antd";
+import { Form, Select, Button, message, Table, Input, InputNumber } from "antd";
+import customerService from "../services/customerService";
 import { getAllItems } from "../services/itemService";
 
 const { Option } = Select;
 
-const ItemSelector = ({ onAddItem }) => {
+const OrderForm = ({ onSubmit, initialValues }) => {
+  const [customers, setCustomers] = useState([]);
   const [items, setItems] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [discount, setDiscount] = useState(0);
+  const [form] = Form.useForm();
 
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const data = await getAllItems();
-        setItems(data);
-      } catch (error) {
-        console.error("Failed to fetch items", error);
-      }
-    };
+    fetchCustomers();
     fetchItems();
   }, []);
 
-  const handleSelectItem = (value) => {
-    const item = items.find((item) => item.id === value);
-    setSelectedItem(item);
-  };
-
-  const handleAddItem = () => {
-    if (selectedItem) {
-      onAddItem({
-        ...selectedItem,
-        quantity,
-        discount,
-      });
-      setSelectedItem(null);
-      setQuantity(1);
-      setDiscount(0);
+  const fetchCustomers = async () => {
+    try {
+      const data = await customerService.getAllCustomers();
+      setCustomers(data.data);
+    } catch (error) {
+      message.error("Failed to fetch customers");
     }
   };
 
+  const fetchItems = async () => {
+    try {
+      const data = await getAllItems();
+      setItems(data.map((item) => ({ ...item, quantity: 0, discount: 0 })));
+    } catch (error) {
+      message.error("Failed to fetch items");
+    }
+  };
+
+  const handleSubmit = (values) => {
+    const orderedItems = items.filter((item) => item.quantity > 0);
+    onSubmit({ ...values, items: orderedItems });
+
+    // Clean all inputs after creating order
+    form.resetFields();
+    setItems(items.map((item) => ({ ...item, quantity: 0, discount: 0 })));
+  };
+
+  const handleQuantityChange = (itemId, value) => {
+    setItems(
+      items.map((item) =>
+        item.id === itemId ? { ...item, quantity: value } : item
+      )
+    );
+  };
+
+  const handleDiscountChange = (itemId, value) => {
+    setItems(
+      items.map((item) =>
+        item.id === itemId ? { ...item, discount: value } : item
+      )
+    );
+  };
+
+  const columns = [
+    {
+      title: "Item Name",
+      dataIndex: "itemName",
+      key: "itemName",
+    },
+    {
+      title: "Supplier",
+      dataIndex: "supplier",
+      key: "supplier",
+    },
+    {
+      title: "Unit Price",
+      dataIndex: "unitPrice",
+      key: "unitPrice",
+    },
+    {
+      title: "Quantity",
+      dataIndex: "quantity",
+      key: "quantity",
+      render: (_, record) => (
+        <InputNumber
+          min={0}
+          value={record.quantity}
+          onChange={(value) => handleQuantityChange(record.id, value)}
+        />
+      ),
+    },
+    {
+      title: "Discount (%)",
+      dataIndex: "discount",
+      key: "discount",
+      render: (_, record) => (
+        <InputNumber
+          min={0}
+          max={100}
+          value={record.discount}
+          onChange={(value) => handleDiscountChange(record.id, value)}
+        />
+      ),
+    },
+    {
+      title: "Total Price",
+      key: "totalPrice",
+      render: (_, record) => (
+        <>{record.unitPrice * record.quantity * (1 - record.discount / 100)}</>
+      ),
+    },
+  ];
+
   return (
-    <>
-      {" "}
-      <Form.Item label="Item">
-        <Select
-          showSearch
-          style={{ width: 400 }}
-          placeholder="Select an item"
-          optionFilterProp="children"
-          onChange={handleSelectItem}
-          filterOption={(input, option) =>
-            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }
-        >
-          {items.map((item) => (
-            <Option key={item.id} value={item.id}>
-              {`${item.itemName} -  ${item.supplier} - Rs ${item.unitPrice}`}
+    <Form
+      form={form}
+      onFinish={handleSubmit}
+      initialValues={initialValues}
+      layout="vertical"
+    >
+      <Form.Item
+        rules={[{ required: true }]}
+        name="orderCode"
+        label="Order Code"
+      >
+        <Input placeholder="Order Code" />
+      </Form.Item>
+      <Form.Item
+        name="customerId"
+        label="Customer"
+        rules={[{ required: true }]}
+      >
+        <Select placeholder="Select a customer">
+          {customers.map((customer) => (
+            <Option key={customer.id} value={customer.id}>
+              {customer.name}
             </Option>
           ))}
         </Select>
       </Form.Item>
-      <Row
-        style={{
-          marginBottom: 20,
-          alignItems: "center",
-          justifyContent: "start",
-        }}
+      <Form.Item
+        name="paymentMethod"
+        label="Payment Method"
+        rules={[{ required: true }]}
       >
-        <Form.Item label="Quantity">
-          <InputNumber
-            min={1}
-            value={quantity}
-            onChange={setQuantity}
-            placeholder="Quantity"
-            style={{ width: 100, marginLeft: 10 }}
-          />
-        </Form.Item>
-        <Form.Item label="Discount">
-          <InputNumber
-            min={0}
-            max={100}
-            value={discount}
-            onChange={setDiscount}
-            placeholder="Discount (%)"
-            style={{ width: 100, marginLeft: 10 }}
-          />
-        </Form.Item>{" "}
-        <Button
-          type="primary"
-          onClick={handleAddItem}
-          style={{ marginLeft: 10 }}
-        >
-          Add Item
+        <Select placeholder="Select a payment method">
+          <Option value="cash">Cash</Option>
+          <Option value="cheque">Cheque</Option>
+          <Option value="credit">Credit</Option>
+        </Select>
+      </Form.Item>
+
+      <Table
+        columns={columns}
+        dataSource={items}
+        rowKey={(record) => record.id}
+        pagination={false}
+        style={{ marginBottom: 20 }}
+      />
+
+      <Form.Item>
+        <Button type="primary" htmlType="submit">
+          {initialValues ? "Update Order" : "Create Order"}
         </Button>
-      </Row>
-    </>
+      </Form.Item>
+    </Form>
   );
 };
 
-export default ItemSelector;
+export default OrderForm;

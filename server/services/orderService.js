@@ -15,7 +15,7 @@ const orderService = {
 
         totalAmount +=
           item.quantity *
-          (itemData.unitPrice - (itemData.unitPrice / 100) * item.discount);
+          (itemData.secondPrice - (itemData.secondPrice / 100) * item.discount);
       }
 
       // Apply discount for cash payments
@@ -26,17 +26,9 @@ const orderService = {
       // Insert order
       const orderInfo = await db
         .prepare(
-          "INSERT INTO orders (customerId, paymentMethod, totalAmount, discount,  paidAmount, paymentStatus,orderDate) VALUES (?, ?, ?, ?, ?, ?,?)"
+          "INSERT INTO orders (customerId, paymentMethod, totalAmount, discount,  paidAmount, paymentStatus) VALUES (?, ?, ?, ?, ?, ?)"
         )
-        .run(
-          customerId,
-          paymentMethod,
-          totalAmount,
-          discount,
-          0,
-          "pending",
-          new Date().toDateString()
-        );
+        .run(customerId, paymentMethod, totalAmount, discount, 0, "pending");
       const orderId = orderInfo.lastInsertRowid;
 
       // Insert order items
@@ -62,7 +54,7 @@ const orderService = {
           item.id,
           item.quantity,
           item.discount,
-          item.quantity * item.unitPrice
+          item.secondPrice
         );
       }
 

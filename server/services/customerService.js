@@ -3,12 +3,12 @@ const initializeDb = require("../db/initializeDb");
 const db = initializeDb();
 
 const customerService = {
-  createCustomer: (name, contactNumber, address, email) => {
+  createCustomer: (name, contactNumber, address, email, customerCode) => {
     const info = db
       .prepare(
-        "INSERT INTO customers (name, contactNumber, address, email) VALUES (?, ?, ?, ?)"
+        "INSERT INTO customers (name, contactNumber, address, email,customerCode) VALUES (?, ?, ?, ?,?)"
       )
-      .run(name, contactNumber, address, email);
+      .run(name, contactNumber, address, email, customerCode);
 
     return { customerId: info.lastInsertRowid };
   },

@@ -101,9 +101,10 @@ const ItemManagement = () => {
   };
 
   const columns = [
+    { title: "Item Code", dataIndex: "itemCode", key: "itemCode" },
     { title: "Item Name", dataIndex: "itemName", key: "itemName" },
     { title: "Unit Type", dataIndex: "unitType", key: "unitType" },
-    { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
+
     {
       title: "Discount 1 (%)",
       dataIndex: "discountPercentage1",
@@ -113,6 +114,20 @@ const ItemManagement = () => {
       title: "Discount 2 (%)",
       dataIndex: "discountPercentage2",
       key: "discountPercentage2",
+    },
+    { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
+    {
+      title: "Second Price",
+      dataIndex: "secondPrice",
+      key: "abc",
+      render: (_, record) => {
+        return (
+          <span>
+            {record.unitPrice -
+              (record.unitPrice * record.discountPercentage1) / 100}
+          </span>
+        );
+      },
     },
     {
       title: "Wholesale Price",
@@ -165,7 +180,7 @@ const ItemManagement = () => {
       <Table columns={columns} dataSource={items} rowKey="id" />
       <Modal
         title={isEditing ? "Update Item" : "Add Item"}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setIsModalVisible(false)}>
@@ -177,6 +192,13 @@ const ItemManagement = () => {
         ]}
       >
         <Form form={form} layout="vertical" onFinish={handleAddOrUpdateItem}>
+          <Form.Item
+            label="Item code"
+            name="itemCode"
+            rules={[{ required: true, message: "Please input the item name!" }]}
+          >
+            <Input placeholder="Item Code" />
+          </Form.Item>
           <Form.Item
             label="Item Name"
             name="itemName"
@@ -239,9 +261,7 @@ const ItemManagement = () => {
           >
             <Select disabled={isEditing} placeholder="Select supplier">
               {suppliers.map((supplier) => (
-                <Option key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </Option>
+                <Option key={supplier.id} value={supplier.id}></Option>
               ))}
             </Select>
           </Form.Item>

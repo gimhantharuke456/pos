@@ -123,11 +123,11 @@ const Orders = () => {
       dataIndex: "customerName",
       key: "customerName",
     },
-    {
-      title: "Order Date",
-      dataIndex: "orderDate",
-      key: "orderDate",
-    },
+    // {
+    //   title: "Order Date",
+    //   dataIndex: "orderDate",
+    //   key: "orderDate",
+    // },
     {
       title: "Payment Method",
       dataIndex: "paymentMethod",
@@ -251,6 +251,14 @@ const Orders = () => {
               title: "Discount (%)",
               dataIndex: "itemDiscount",
               key: "itemDiscount",
+            },
+            {
+              title: "Discounted Price",
+              dataIndex: "asda",
+              key: "discountedPrice",
+              render: (text, record) => (
+                <>{record.itemPrice - record.itemDiscount}</>
+              ),
             },
             {
               title: "Total Price",

@@ -7,7 +7,7 @@ const purchaseOrderModel = {
     return db
       .prepare(
         `
-      SELECT po.*, s.name as supplierName
+      SELECT po.*, s.name as supplierName 
       FROM purchaseOrders po
       JOIN suppliers s ON po.supplierId = s.id
     WHERE po.status <> 'DELETED'
@@ -29,15 +29,15 @@ const purchaseOrderModel = {
       .get(id);
   },
 
-  createPurchaseOrder: (orderDate, status, supplierId) => {
+  createPurchaseOrder: (orderDate, status, supplierId, purchaseOrderCode) => {
     const info = db
       .prepare(
         `
-      INSERT INTO purchaseOrders (orderDate, status, supplierId)
-      VALUES (?, ?, ?)
+      INSERT INTO purchaseOrders (purchaseOrderCode,orderDate, status, supplierId)
+      VALUES (?,?, ?, ?)
     `
       )
-      .run(orderDate, status, supplierId);
+      .run(purchaseOrderCode, orderDate, status, supplierId);
     return info.lastInsertRowid;
   },
 
@@ -88,7 +88,7 @@ const purchaseOrderModel = {
     return await db
       .prepare(
         `
-      SELECT poi.*, i.itemName, i.unitPrice
+      SELECT poi.*, i.*
       FROM purchaseOrderItems poi
       JOIN items i ON poi.itemId = i.id
       WHERE poi.purchaseOrderId = ?

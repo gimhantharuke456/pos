@@ -67,7 +67,7 @@ const PurchaseOrderList = () => {
   };
 
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id" },
+    { title: "Order Code", dataIndex: "purchaseOrderCode", key: "id" },
     { title: "Order Date", dataIndex: "orderDate", key: "orderDate" },
     { title: "Status", dataIndex: "status", key: "status" },
     { title: "Supplier", dataIndex: "supplierName", key: "supplierName" },
@@ -108,6 +108,7 @@ const PurchaseOrderList = () => {
       </Button>
       <Table columns={columns} dataSource={purchaseOrders} rowKey="id" />
       <Modal
+        width={1200}
         title={selectedPO ? "Edit Purchase Order" : "Create Purchase Order"}
         open={isModalVisible}
         onCancel={handleModalClose}
@@ -120,7 +121,7 @@ const PurchaseOrderList = () => {
         />
       </Modal>
       <Modal
-        width={800}
+        width={1200}
         title={""}
         open={isViewOrder}
         onCancel={handleModalClose}

@@ -13,7 +13,9 @@ const initializeDb = () => {
     CREATE TABLE IF NOT EXISTS suppliers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
+      supplierCode TEXT,
       contactNumber TEXT,
+      deleteStatus BOOLEAN DEFAULT FALSE,
       address TEXT,
       email TEXT
     )
@@ -23,12 +25,15 @@ const initializeDb = () => {
     CREATE TABLE IF NOT EXISTS items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       itemName TEXT,
+      itemCode TEXT,
       unitType TEXT,
       unitPrice REAL,
       discountPercentage1 REAL,
       discountPercentage2 REAL,
+      deleteStatus BOOLEAN DEFAULT FALSE,
       supplierId INTEGER,
       wholesalePrice REAL,
+      secondPrice REAL,
       FOREIGN KEY (supplierId) REFERENCES suppliers(id)
     )
   `);
@@ -37,6 +42,7 @@ const initializeDb = () => {
     CREATE TABLE IF NOT EXISTS purchaseOrders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       orderDate TEXT,
+      purchaseOrderCode TEXT,
       status TEXT DEFAULT 'Pending',
       supplierId INTEGER,
       FOREIGN KEY (supplierId) REFERENCES suppliers(id)
@@ -59,6 +65,7 @@ const initializeDb = () => {
   CREATE TABLE IF NOT EXISTS goodsReceivedNotes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     purchaseOrderId INTEGER UNIQUE,
+    goodReceivedNoteCode TEXT,
     receiveDate TEXT,
     status TEXT DEFAULT 'PENDING',
     FOREIGN KEY (purchaseOrderId) REFERENCES purchaseOrders(id)
@@ -91,12 +98,13 @@ const initializeDb = () => {
   db.exec(`
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customerCode TEXT,
       name TEXT NOT NULL,
       contactNumber TEXT,
       address TEXT NOT NULL,
       email TEXT,
       deleteStatus BOOLEAN DEFAULT FALSE
-    )
+    );
   `);
   db.exec(`
     CREATE TABLE IF NOT EXISTS orders (

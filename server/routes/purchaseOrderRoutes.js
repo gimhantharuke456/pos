@@ -15,11 +15,13 @@ router.get("/", (req, res) => {
 // Create a new purchase order
 router.post("/", async (req, res) => {
   try {
-    const { orderDate, status, supplierId, items } = req.body;
+    const { orderDate, status, supplierId, items, purchaseOrderCode } =
+      req.body;
     const purchaseOrderId = await purchaseOrderModel.createPurchaseOrder(
       orderDate,
       status,
-      supplierId
+      supplierId,
+      purchaseOrderCode
     );
 
     for (let item of items) {

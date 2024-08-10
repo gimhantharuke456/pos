@@ -6,19 +6,18 @@ const router = express.Router();
 // Create a new customer
 router.post("/", (req, res) => {
   try {
-    const { name, contactNumber, address, email } = req.body;
+    const { name, contactNumber, address, email, customerCode } = req.body;
     const result = customerService.createCustomer(
       name,
       contactNumber,
       address,
-      email
+      email,
+      customerCode
     );
-    res
-      .status(201)
-      .json({
-        message: "Customer created successfully",
-        customerId: result.customerId,
-      });
+    res.status(201).json({
+      message: "Customer created successfully",
+      customerId: result.customerId,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
