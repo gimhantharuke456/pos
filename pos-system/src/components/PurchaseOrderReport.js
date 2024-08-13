@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Typography, Table, Button } from "antd";
+import { Card, Typography, Table, Button, Row } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import { purchaseOrderService } from "../services/purchaseOrderService";
 import { usePDF } from "react-to-pdf";
@@ -30,9 +30,8 @@ const PurchaseOrderReport = ({ purchaseOrderId }) => {
     { title: "Item", dataIndex: "itemName", key: "item" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
     { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
-    { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
     {
-      title: "Second Price",
+      title: "First Margin",
       dataIndex: "secondPrice",
       key: "abc",
       render: (_, record) => {
@@ -52,11 +51,16 @@ const PurchaseOrderReport = ({ purchaseOrderId }) => {
     {
       title: "Total",
       key: "total",
-      render: (_, record) => (record.quantity * record?.unitPrice).toFixed(2),
+      render: (_, record) => (record.quantity * record?.secondPrice).toFixed(2),
     },
   ];
 
   const total = purchaseOrder.items?.reduce(
+    (sum, item) => sum + item.quantity * item?.secondPrice,
+    0
+  );
+
+  const poValue = purchaseOrder?.items.reduce(
     (sum, item) => sum + item.quantity * item?.unitPrice,
     0
   );
@@ -66,13 +70,13 @@ const PurchaseOrderReport = ({ purchaseOrderId }) => {
       <div ref={targetRef}>
         <Title level={3}>Purchase Order Report</Title>
         <Text strong>Purchase Order ID: </Text>
-        <Text>{purchaseOrder.id}</Text>
+        <Text>{purchaseOrder.purchaseOrderCode}</Text>
         <br />
         <Text strong>Order Date: </Text>
         <Text>{new Date(purchaseOrder.orderDate).toLocaleDateString()}</Text>
         <br />
         <Text strong>Supplier: </Text>
-        <Text>{purchaseOrder.Supplier?.name}</Text>
+        <Text>{purchaseOrder?.supplierName}</Text>
         <br />
         <Text strong>Status: </Text>
         <Text>{purchaseOrder.status}</Text>
@@ -85,7 +89,12 @@ const PurchaseOrderReport = ({ purchaseOrderId }) => {
           pagination={false}
         />
         <br />
-        <Text strong>Total: ${total?.toFixed(2)}</Text>
+        <Row justify={"end"}>
+          <Text strong>Total: ${total?.toFixed(2)}</Text>
+        </Row>
+        <Row justify={"end"}>
+          <Text strong>PO Value: ${(poValue - total).toFixed(2)}</Text>
+        </Row>
       </div>
       <br />
       <Button

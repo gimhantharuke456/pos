@@ -261,7 +261,9 @@ const ItemManagement = () => {
           >
             <Select disabled={isEditing} placeholder="Select supplier">
               {suppliers.map((supplier) => (
-                <Option key={supplier.id} value={supplier.id}></Option>
+                <Option key={supplier.id} value={supplier.id}>
+                  {supplier.supplierCode}
+                </Option>
               ))}
             </Select>
           </Form.Item>

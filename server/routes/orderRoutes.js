@@ -5,13 +5,16 @@ const orderService = require("../services/orderService");
 // Create a new order
 router.post("/", async (req, res) => {
   try {
-    const { customerId, paymentMethod, items } = req.body;
+    const { customerId, paymentMethod, items, totalAmount } = req.body;
     const orderId = await orderService.createOrder(
       customerId,
       paymentMethod,
-      items
+      items,
+      totalAmount
     );
-    res.status(201).json({ message: "Order created successfully", orderId });
+    res
+      .status(201)
+      .json({ message: "Order created successfully", orderId, totalAmount });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

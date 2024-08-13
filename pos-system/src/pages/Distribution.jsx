@@ -52,6 +52,11 @@ const Distribution = () => {
 
   const columns = [
     {
+      title: "Item Code",
+      dataIndex: "itemCode",
+      key: "itemCode",
+    },
+    {
       title: "Item Name",
       dataIndex: "itemName",
       key: "itemName",
@@ -60,6 +65,11 @@ const Distribution = () => {
       title: "Supplier Name",
       dataIndex: "supplierName",
       key: "supplierName",
+    },
+    {
+      title: "Supplier Code",
+      dataIndex: "supplierCode",
+      key: "supplierCode",
     },
     {
       title: "In Stock Amount",

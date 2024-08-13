@@ -3,19 +3,13 @@ const db = initializeDb();
 
 const orderService = {
   // Create a new order
-  createOrder: async (customerId, paymentMethod, items) => {
+  createOrder: async (customerId, paymentMethod, items, totalAmount) => {
     return db.transaction(async () => {
-      let totalAmount = 0;
-
       // Calculate total amount
       for (const item of items) {
         const itemData = await db
           .prepare("SELECT * FROM items WHERE id = ?")
           .get(item.id);
-
-        totalAmount +=
-          item.quantity *
-          (itemData.secondPrice - (itemData.secondPrice / 100) * item.discount);
       }
 
       // Apply discount for cash payments
@@ -33,7 +27,7 @@ const orderService = {
 
       // Insert order items
       const insertOrderItem = db.prepare(
-        "INSERT INTO orderItems (orderId, itemId, quantity,itemDiscount ,itemPrice) VALUES (?, ?, ?,?, ?)"
+        "INSERT INTO orderItems (orderId, itemId, quantity,discount1,discount2 ,itemPrice) VALUES (?, ?,?, ?,?, ?)"
       );
 
       const updateDistribution = db.prepare(
@@ -53,7 +47,8 @@ const orderService = {
           orderId,
           item.id,
           item.quantity,
-          item.discount,
+          item.discount1,
+          item.discount2,
           item.secondPrice
         );
       }

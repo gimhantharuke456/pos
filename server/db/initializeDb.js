@@ -13,7 +13,7 @@ const initializeDb = () => {
     CREATE TABLE IF NOT EXISTS suppliers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
-      supplierCode TEXT,
+      supplierCode TEXT UNIQUE,
       contactNumber TEXT,
       deleteStatus BOOLEAN DEFAULT FALSE,
       address TEXT,
@@ -25,7 +25,7 @@ const initializeDb = () => {
     CREATE TABLE IF NOT EXISTS items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       itemName TEXT,
-      itemCode TEXT,
+      itemCode TEXT UNIQUE,
       unitType TEXT,
       unitPrice REAL,
       discountPercentage1 REAL,
@@ -42,7 +42,7 @@ const initializeDb = () => {
     CREATE TABLE IF NOT EXISTS purchaseOrders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       orderDate TEXT,
-      purchaseOrderCode TEXT,
+      purchaseOrderCode TEXT UNIQUE,
       status TEXT DEFAULT 'Pending',
       supplierId INTEGER,
       FOREIGN KEY (supplierId) REFERENCES suppliers(id)
@@ -98,7 +98,7 @@ const initializeDb = () => {
   db.exec(`
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      customerCode TEXT,
+      customerCode TEXT UNIQUE,
       name TEXT NOT NULL,
       contactNumber TEXT,
       address TEXT NOT NULL,
@@ -129,7 +129,8 @@ const initializeDb = () => {
       itemId INTEGER NOT NULL,
       quantity INTEGER NOT NULL,
       itemPrice REAL NOT NULL,
-      itemDiscount REAL DEFAULT 0,
+      discount1 REAL DEFAULT 0,
+      discount2 REAL DEFAULT 0,
       FOREIGN KEY (orderId) REFERENCES orders(id),
       FOREIGN KEY (itemId) REFERENCES items(id)
     )

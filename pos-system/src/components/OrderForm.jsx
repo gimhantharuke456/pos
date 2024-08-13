@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { Form, Select, Button, message, Table, Input, InputNumber } from "antd";
+import {
+  Form,
+  Select,
+  Button,
+  message,
+  Table,
+  Input,
+  InputNumber,
+  Spin,
+} from "antd";
 import customerService from "../services/customerService";
 import { getAllItems } from "../services/itemService";
+import supplierService from "../services/supplierService";
 
 const { Option } = Select;
 
 const OrderForm = ({ onSubmit, initialValues }) => {
   const [customers, setCustomers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
 
   useEffect(() => {
     fetchCustomers();
-    fetchItems();
+    fetchSuppliers();
   }, []);
 
   const fetchCustomers = async () => {
@@ -24,22 +37,62 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     }
   };
 
-  const fetchItems = async () => {
+  const fetchSuppliers = async () => {
     try {
-      const data = await getAllItems();
-      setItems(data.map((item) => ({ ...item, quantity: 0, discount: 0 })));
+      const data = await supplierService.getAllSuppliers();
+      setSuppliers(data);
     } catch (error) {
-      message.error("Failed to fetch items");
+      message.error("Failed to fetch suppliers");
     }
   };
 
-  const handleSubmit = (values) => {
-    const orderedItems = items.filter((item) => item.quantity > 0);
-    onSubmit({ ...values, items: orderedItems });
+  const fetchItemsBySupplier = async (supplierId) => {
+    setLoading(true);
+    try {
+      const data = await getAllItems(supplierId);
+      setItems(
+        data.map((item) => ({
+          ...item,
+          quantity: 0,
+          discount1: 0,
+          discount2: 0,
+        }))
+      );
+    } catch (error) {
+      message.error("Failed to fetch items");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Clean all inputs after creating order
-    form.resetFields();
-    setItems(items.map((item) => ({ ...item, quantity: 0, discount: 0 })));
+  const handleSubmit = async (values) => {
+    setSubmitting(true);
+    try {
+      const orderedItems = items.filter((item) => item.quantity > 0);
+      const total = orderedItems.reduce((sum, item) => {
+        const { unitPrice, quantity, discount1, discount2 } = item;
+        const itemTotal =
+          unitPrice * quantity -
+          (unitPrice * discount1 * quantity) / 100 -
+          (unitPrice * discount2 * quantity) / 100;
+        return sum + itemTotal;
+      }, 0);
+      await onSubmit({ ...values, items: orderedItems, totalAmount: total });
+      message.success("Order submitted successfully");
+      form.resetFields();
+      setItems(
+        items.map((item) => ({
+          ...item,
+          quantity: 0,
+          discount1: 0,
+          discount2: 0,
+        }))
+      );
+    } catch (error) {
+      message.error("Failed to submit order " + error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleQuantityChange = (itemId, value) => {
@@ -50,10 +103,10 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     );
   };
 
-  const handleDiscountChange = (itemId, value) => {
+  const handleDiscountChange = (itemId, discountType, value) => {
     setItems(
       items.map((item) =>
-        item.id === itemId ? { ...item, discount: value } : item
+        item.id === itemId ? { ...item, [discountType]: value } : item
       )
     );
   };
@@ -65,14 +118,9 @@ const OrderForm = ({ onSubmit, initialValues }) => {
       key: "itemName",
     },
     {
-      title: "Supplier",
-      dataIndex: "supplier",
-      key: "supplier",
-    },
-    {
       title: "Selling Price",
-      dataIndex: "secondPrice",
-      key: "secondPrice",
+      dataIndex: "unitPrice",
+      key: "unitPrice",
     },
     {
       title: "Quantity",
@@ -87,15 +135,32 @@ const OrderForm = ({ onSubmit, initialValues }) => {
       ),
     },
     {
-      title: "Discount (%)",
-      dataIndex: "discount",
-      key: "discount",
+      title: "Discount 1 (%)",
+      dataIndex: "discount1",
+      key: "discount1",
       render: (_, record) => (
         <InputNumber
           min={0}
           max={100}
-          value={record.discount}
-          onChange={(value) => handleDiscountChange(record.id, value)}
+          value={record.discount1}
+          onChange={(value) =>
+            handleDiscountChange(record.id, "discount1", value)
+          }
+        />
+      ),
+    },
+    {
+      title: "Discount 2 (%)",
+      dataIndex: "discount2",
+      key: "discount2",
+      render: (_, record) => (
+        <InputNumber
+          min={0}
+          max={100}
+          value={record.discount2}
+          onChange={(value) =>
+            handleDiscountChange(record.id, "discount2", value)
+          }
         />
       ),
     },
@@ -105,9 +170,10 @@ const OrderForm = ({ onSubmit, initialValues }) => {
       render: (_, record) => (
         <>
           {(
-            record.secondPrice *
+            record.unitPrice *
             record.quantity *
-            (1 - record.discount / 100)
+            (1 - record.discount1 / 100) *
+            (1 - record.discount2 / 100)
           ).toFixed(2)}
         </>
       ),
@@ -142,6 +208,19 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         </Select>
       </Form.Item>
       <Form.Item
+        name="supplierId"
+        label="Supplier"
+        rules={[{ required: true }]}
+      >
+        <Select placeholder="Select a supplier" onChange={fetchItemsBySupplier}>
+          {suppliers.map((supplier) => (
+            <Option key={supplier.id} value={supplier.id}>
+              {supplier.name}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+      <Form.Item
         name="paymentMethod"
         label="Payment Method"
         rules={[{ required: true }]}
@@ -153,16 +232,20 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         </Select>
       </Form.Item>
 
-      <Table
-        columns={columns}
-        dataSource={items}
-        rowKey={(record) => record.id}
-        pagination={false}
-        style={{ marginBottom: 20 }}
-      />
+      {loading ? (
+        <Spin />
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={items}
+          rowKey={(record) => record.id}
+          pagination={false}
+          style={{ marginBottom: 20 }}
+        />
+      )}
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" htmlType="submit" loading={submitting}>
           {initialValues ? "Update Order" : "Create Order"}
         </Button>
       </Form.Item>

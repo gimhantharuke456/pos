@@ -179,8 +179,9 @@ const GrnManagement = () => {
       />
 
       <Modal
+        width={1200}
         title="Create GRN"
-        visible={modalVisible}
+        open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
       >
@@ -196,7 +197,7 @@ const GrnManagement = () => {
             >
               {purchaseOrders.map((po) => (
                 <Option key={po.id} value={po.id}>
-                  {`${po.id} - ${po.supplierName} - ${po.orderDate}`}
+                  {`${po.purchaseOrderCode} - ${po.supplierName} - ${po.orderDate}`}
                 </Option>
               ))}
             </Select>
@@ -263,7 +264,7 @@ const GrnManagement = () => {
       </Modal>
       {selectedPO && (
         <Modal
-          width={800}
+          width={1200}
           title="GRN Report"
           open={showGrnReportModal}
           onCancel={() => setShowGrnReportModal(false)}

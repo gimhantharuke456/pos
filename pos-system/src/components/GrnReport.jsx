@@ -70,6 +70,21 @@ const GrnReport = ({ grnId, refresh }) => {
       key: "itemName",
     },
     {
+      title: "Unit Price",
+      dataIndex: "unitPrice",
+      key: "unitPrice",
+    },
+    {
+      title: "First Margin",
+      dataIndex: "secondPrice",
+      key: "secondPrice",
+    },
+    {
+      title: "Wholesale Price",
+      dataIndex: "wholesalePrice",
+      key: "wholesalePrice",
+    },
+    {
       title: "Ordered Quantity",
       dataIndex: "orderedQuantity",
       key: "orderedQuantity",
@@ -79,20 +94,42 @@ const GrnReport = ({ grnId, refresh }) => {
       dataIndex: "receivedQuantity",
       key: "receivedQuantity",
     },
+    {
+      title: "Total Ordered Amount",
+      dataIndex: "total",
+      key: "total",
+      render: (_, record) => {
+        const total =
+          record.orderedQuantity *
+          (record.secondPrice || record.wholesalePrice);
+        return total;
+      },
+    },
+    {
+      title: "Total Recieved Amount",
+      dataIndex: "recievedAmount",
+      key: "recievedAmount",
+      render: (_, record) => {
+        const total =
+          record.receivedQuantity *
+          (record.secondPrice || record.wholesalePrice);
+        return total;
+      },
+    },
   ];
 
   return (
-    <Card title={`GRN Report - ID: ${grnData.id}`} id="grn-report">
+    <Card id="grn-report">
       <Descriptions bordered column={1}>
-        <Descriptions.Item label="Purchase Order ID">
-          {grnData.purchaseOrderId}
+        <Descriptions.Item label="Purchase Order Code">
+          {grnData.purchaseOrderCode}
         </Descriptions.Item>
         <Descriptions.Item label="Receive Date">
           {grnData.receiveDate}
         </Descriptions.Item>
         <Descriptions.Item label="Status">{grnData.status}</Descriptions.Item>
-        <Descriptions.Item label="Supplier ID">
-          {grnData.supplierId}
+        <Descriptions.Item label="Supplier Code">
+          {grnData.supplierCode}
         </Descriptions.Item>
       </Descriptions>
 

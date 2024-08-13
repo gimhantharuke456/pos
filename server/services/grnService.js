@@ -87,17 +87,18 @@ const grnService = {
   getGRNById: (id) => {
     const grn = db
       .prepare(
-        `SELECT grn.*, po.supplierId
-         FROM goodsReceivedNotes grn
-         JOIN purchaseOrders po ON grn.purchaseOrderId = po.id
-         WHERE grn.id = ?`
+        `SELECT grn.*, po.purchaseOrderCode ,po.supplierId, s.supplierCode 
+       FROM goodsReceivedNotes grn
+       JOIN purchaseOrders po ON grn.purchaseOrderId = po.id
+       JOIN suppliers s ON po.supplierId = s.id
+       WHERE grn.id = ?`
       )
       .get(id);
 
     if (grn) {
       grn.items = db
         .prepare(
-          `SELECT gri.*, i.itemName
+          `SELECT gri.*, i.*
            FROM goodsReceivedItems gri
            JOIN items i ON gri.itemId = i.id
            WHERE gri.goodsReceivedNoteId = ?`
