@@ -13,7 +13,7 @@ const InstockAmount = ({ id }) => {
         console.error(err);
       });
   }, [id]);
-  return <div>{inStockAmount?.inStockAmount}</div>;
+  return <div>{inStockAmount?.inStockAmount ?? 0}</div>;
 };
 
 export default InstockAmount;

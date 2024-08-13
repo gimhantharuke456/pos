@@ -17,7 +17,9 @@ const initializeDb = () => {
       contactNumber TEXT,
       deleteStatus BOOLEAN DEFAULT FALSE,
       address TEXT,
-      email TEXT
+      email TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -34,6 +36,8 @@ const initializeDb = () => {
       supplierId INTEGER,
       wholesalePrice REAL,
       secondPrice REAL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (supplierId) REFERENCES suppliers(id)
     )
   `);
@@ -45,6 +49,8 @@ const initializeDb = () => {
       purchaseOrderCode TEXT UNIQUE,
       status TEXT DEFAULT 'Pending',
       supplierId INTEGER,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (supplierId) REFERENCES suppliers(id)
     )
   `);
@@ -55,46 +61,51 @@ const initializeDb = () => {
       purchaseOrderId INTEGER,
       itemId INTEGER,
       quantity INTEGER,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (purchaseOrderId) REFERENCES purchaseOrders(id),
       FOREIGN KEY (itemId) REFERENCES items(id)
     )
   `);
 
-  //grn
   db.exec(`
-  CREATE TABLE IF NOT EXISTS goodsReceivedNotes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    purchaseOrderId INTEGER UNIQUE,
-    goodReceivedNoteCode TEXT,
-    receiveDate TEXT,
-    status TEXT DEFAULT 'PENDING',
-    FOREIGN KEY (purchaseOrderId) REFERENCES purchaseOrders(id)
-  )
-`);
+    CREATE TABLE IF NOT EXISTS goodsReceivedNotes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchaseOrderId INTEGER UNIQUE,
+      goodReceivedNoteCode TEXT,
+      receiveDate TEXT,
+      status TEXT DEFAULT 'PENDING',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (purchaseOrderId) REFERENCES purchaseOrders(id)
+    )
+  `);
 
   db.exec(`
-  CREATE TABLE IF NOT EXISTS goodsReceivedItems (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    goodsReceivedNoteId INTEGER,
-    itemId INTEGER,
-    orderedQuantity INTEGER,
-    receivedQuantity INTEGER,
-    FOREIGN KEY (goodsReceivedNoteId) REFERENCES goodsReceivedNotes(id),
-    FOREIGN KEY (itemId) REFERENCES items(id)
-  )
-`);
+    CREATE TABLE IF NOT EXISTS goodsReceivedItems (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      goodsReceivedNoteId INTEGER,
+      itemId INTEGER,
+      orderedQuantity INTEGER,
+      receivedQuantity INTEGER,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (goodsReceivedNoteId) REFERENCES goodsReceivedNotes(id),
+      FOREIGN KEY (itemId) REFERENCES items(id)
+    )
+  `);
 
-  //distributions
   db.exec(`
     CREATE TABLE IF NOT EXISTS distributions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       itemId INTEGER,
       inStockAmount INTEGER,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (itemId) REFERENCES items(id)
     )
   `);
 
-  // Create customers table with deleteStatus column
   db.exec(`
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -103,9 +114,12 @@ const initializeDb = () => {
       contactNumber TEXT,
       address TEXT NOT NULL,
       email TEXT,
-      deleteStatus BOOLEAN DEFAULT FALSE
-    );
+      deleteStatus BOOLEAN DEFAULT FALSE,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
   `);
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -118,6 +132,7 @@ const initializeDb = () => {
       paidAmount REAL DEFAULT 0,
       outstandingAmount REAL GENERATED ALWAYS AS (totalAmount - paidAmount - discount) VIRTUAL,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (customerId) REFERENCES customers(id)
     )
   `);
@@ -131,6 +146,8 @@ const initializeDb = () => {
       itemPrice REAL NOT NULL,
       discount1 REAL DEFAULT 0,
       discount2 REAL DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (orderId) REFERENCES orders(id),
       FOREIGN KEY (itemId) REFERENCES items(id)
     )

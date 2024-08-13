@@ -74,6 +74,7 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
   const columns = [
     { title: "Item Code", dataIndex: "itemCode", key: "itemCode" },
     { title: "Item Name", dataIndex: "itemName", key: "itemName" },
+
     {
       title: "Instock Amount",
       dataIndex: "inStockAmount",
@@ -83,7 +84,12 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
       },
     },
     { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
-
+    { title: "First Margin", dataIndex: "secondPrice", key: "secondPrice" },
+    {
+      title: "Wholesale Price",
+      dataIndex: "wholesalePrice",
+      key: "wholesalePrice",
+    },
     {
       title: "Quantity",
       dataIndex: "quantity",

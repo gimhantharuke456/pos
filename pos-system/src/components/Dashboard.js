@@ -16,6 +16,7 @@ import GrnManagement from "../pages/GrnManagement";
 import Distribution from "../pages/Distribution";
 import CustomerManagement from "../pages/CustomerManagement";
 import Orders from "../pages/Orders";
+import Reports from "./Reports";
 
 const { Sider, Content } = Layout;
 
@@ -114,6 +115,7 @@ const Dashboard = () => {
             {activeIndex === 5 && <Distribution />}
             {activeIndex === 6 && <CustomerManagement />}
             {activeIndex === 7 && <Orders />}
+            {activeIndex === 8 && <Reports />}
           </div>
         </Content>
       </Layout>
