@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Typography, Table, Button, Row } from "antd";
+import { Card, Typography, Table, Button, Row, Divider } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import { purchaseOrderService } from "../services/purchaseOrderService";
 import { usePDF } from "react-to-pdf";
@@ -27,31 +27,23 @@ const PurchaseOrderReport = ({ purchaseOrderId }) => {
   if (!purchaseOrder) return <div>Loading...</div>;
 
   const columns = [
+    { title: "Item Code", dataIndex: "itemCode", key: "itemCode" },
     { title: "Item", dataIndex: "itemName", key: "item" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
-    { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
+    { title: "Retail Price", dataIndex: "unitPrice", key: "unitPrice" },
     {
-      title: "First Margin",
+      title: "Customer Margin",
       dataIndex: "secondPrice",
       key: "abc",
       render: (_, record) => {
-        return (
-          <span>
-            {record.unitPrice -
-              (record.unitPrice * record.discountPercentage1) / 100}
-          </span>
-        );
+        return <span>{record.discountPercentage1}</span>;
       },
     },
+
     {
-      title: "Wholesale Price",
-      dataIndex: "wholesalePrice",
-      key: "wholesalePrice",
-    },
-    {
-      title: "Total",
+      title: "Amount",
       key: "total",
-      render: (_, record) => (record.quantity * record?.secondPrice).toFixed(2),
+      render: (_, record) => (record?.secondPrice).toFixed(2),
     },
   ];
 
@@ -90,10 +82,23 @@ const PurchaseOrderReport = ({ purchaseOrderId }) => {
         />
         <br />
         <Row justify={"end"}>
-          <Text strong>Total: ${total?.toFixed(2)}</Text>
+          <Text strong>Total : LKR {total?.toFixed(2)}</Text>
+          <br />
         </Row>
+        <Divider />
         <Row justify={"end"}>
-          <Text strong>PO Value: ${(poValue - total).toFixed(2)}</Text>
+          <Text strong>
+            Distributed Margin : LKR{" "}
+            {(total * purchaseOrder.items[0]?.discountPercentage2) / 100}
+          </Text>
+        </Row>
+        <Divider />
+        <Row justify={"end"}>
+          <Text strong>
+            PO Value : LKR{" "}
+            {total -
+              (total * purchaseOrder.items[0]?.discountPercentage2) / 100}{" "}
+          </Text>
         </Row>
       </div>
       <br />

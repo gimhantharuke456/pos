@@ -60,9 +60,9 @@ const GrnReport = ({ grnId, refresh }) => {
 
   const columns = [
     {
-      title: "Item ID",
-      dataIndex: "itemId",
-      key: "itemId",
+      title: "Item Code",
+      dataIndex: "itemCode",
+      key: "itemCode",
     },
     {
       title: "Item Name",
@@ -75,36 +75,26 @@ const GrnReport = ({ grnId, refresh }) => {
       key: "unitPrice",
     },
     {
-      title: "First Margin",
+      title: "Customer Margin",
       dataIndex: "secondPrice",
       key: "secondPrice",
-    },
-    {
-      title: "Wholesale Price",
-      dataIndex: "wholesalePrice",
-      key: "wholesalePrice",
-    },
-    {
-      title: "Ordered Quantity",
-      dataIndex: "orderedQuantity",
-      key: "orderedQuantity",
     },
     {
       title: "Received Quantity",
       dataIndex: "receivedQuantity",
       key: "receivedQuantity",
     },
-    {
-      title: "Total Ordered Amount",
-      dataIndex: "total",
-      key: "total",
-      render: (_, record) => {
-        const total =
-          record.orderedQuantity *
-          (record.secondPrice || record.wholesalePrice);
-        return total;
-      },
-    },
+    // {
+    //   title: "Total Ordered Amount",
+    //   dataIndex: "total",
+    //   key: "total",
+    //   render: (_, record) => {
+    //     const total =
+    //       record.orderedQuantity *
+    //       (record.secondPrice || record.wholesalePrice);
+    //     return total;
+    //   },
+    // },
     {
       title: "Total Recieved Amount",
       dataIndex: "recievedAmount",

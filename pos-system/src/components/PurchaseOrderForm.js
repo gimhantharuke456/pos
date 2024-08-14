@@ -83,7 +83,7 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
         return <InstockAmount id={record.id} />;
       },
     },
-    { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
+
     { title: "First Margin", dataIndex: "secondPrice", key: "secondPrice" },
     {
       title: "Wholesale Price",

@@ -153,6 +153,21 @@ const initializeDb = () => {
     )
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS returns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      orderId INTEGER NOT NULL,
+      itemId INTEGER NOT NULL,
+      quantity INTEGER NOT NULL,
+      reason TEXT,
+      status TEXT CHECK(status IN ('reusable', 'non-reusable')) NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (orderId) REFERENCES orders(id),
+      FOREIGN KEY (itemId) REFERENCES items(id)
+    )
+  `);
+
   console.log("Database initialized");
   return db;
 };

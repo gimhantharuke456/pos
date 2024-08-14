@@ -1,18 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { Table, Spin, message, Button } from "antd";
+import { Table, Spin, message, Button, Input, Select } from "antd";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+import moment from "moment";
 import distributionService from "../services/distributionService";
+
+const { Option } = Select;
 
 const Distribution = () => {
   const [loading, setLoading] = useState(true);
   const [distributions, setDistributions] = useState([]);
+  const [filteredDistributions, setFilteredDistributions] = useState([]);
+  const [supplierCodes, setSupplierCodes] = useState([]);
+  const [searchCode, setSearchCode] = useState("");
+  const [selectedSupplierCode, setSelectedSupplierCode] = useState(null);
 
   useEffect(() => {
     const fetchDistributions = async () => {
       try {
         const response = await distributionService.getAllDistributions();
-        setDistributions(response.data);
+        const formattedData = response.data.map((item) => ({
+          ...item,
+          formattedDate: moment(item.updatedAt).format("YYYY-MM-DD HH:mm:ss"),
+        }));
+        setDistributions(formattedData);
+        setFilteredDistributions(formattedData);
+        const codes = [
+          ...new Set(formattedData.map((item) => item.supplierCode)),
+        ];
+        setSupplierCodes(codes);
       } catch (error) {
         console.error("Failed to fetch distributions", error);
         message.error("Failed to fetch distributions");
@@ -23,21 +39,43 @@ const Distribution = () => {
     fetchDistributions();
   }, []);
 
+  useEffect(() => {
+    filterDistributions();
+  }, [searchCode, selectedSupplierCode, distributions]);
+
+  const filterDistributions = () => {
+    let filtered = [...distributions];
+    if (searchCode) {
+      filtered = filtered.filter((item) =>
+        item.itemCode.toLowerCase().includes(searchCode.toLowerCase())
+      );
+    }
+    if (selectedSupplierCode) {
+      filtered = filtered.filter(
+        (item) => item.supplierCode === selectedSupplierCode
+      );
+    }
+    setFilteredDistributions(filtered);
+  };
+
   const generatePDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["Item Name", "Supplier Name", "In Stock Amount"];
-    const tableRows = [];
+    const tableColumn = [
+      "Item Name",
+      "Supplier Name",
+      "In Stock Amount",
+      "Wholesale Price",
+      "Added Date",
+    ];
+    const tableRows = filteredDistributions.map((distribution) => [
+      distribution.itemName,
+      distribution.supplierName,
+      distribution.inStockAmount,
+      distribution.wholesalePrice,
+      distribution.formattedDate,
+    ]);
 
-    distributions.forEach((distribution) => {
-      const distributionData = [
-        distribution.itemName,
-        distribution.supplierName,
-        distribution.inStockAmount,
-      ];
-      tableRows.push(distributionData);
-    });
-
-    const currentDate = new Date().toLocaleDateString();
+    const currentDate = moment().format("YYYY-MM-DD");
 
     doc.text("Current Stock Report", 14, 15);
     doc.text(`Date: ${currentDate}`, 14, 25);
@@ -55,26 +93,43 @@ const Distribution = () => {
       title: "Item Code",
       dataIndex: "itemCode",
       key: "itemCode",
+      sorter: (a, b) => a.itemCode.localeCompare(b.itemCode),
     },
     {
       title: "Item Name",
       dataIndex: "itemName",
       key: "itemName",
+      sorter: (a, b) => a.itemName.localeCompare(b.itemName),
     },
     {
       title: "Supplier Name",
       dataIndex: "supplierName",
       key: "supplierName",
+      sorter: (a, b) => a.supplierName.localeCompare(b.supplierName),
     },
     {
       title: "Supplier Code",
       dataIndex: "supplierCode",
       key: "supplierCode",
+      sorter: (a, b) => a.supplierCode.localeCompare(b.supplierCode),
     },
     {
       title: "In Stock Amount",
       dataIndex: "inStockAmount",
       key: "inStockAmount",
+      sorter: (a, b) => a.inStockAmount - b.inStockAmount,
+    },
+    {
+      title: "Distributed Price",
+      dataIndex: "wholesalePrice",
+      key: "wholesalePrice",
+      sorter: (a, b) => a.wholesalePrice - b.wholesalePrice,
+    },
+    {
+      title: "Added Date",
+      dataIndex: "formattedDate",
+      key: "formattedDate",
+      sorter: (a, b) => moment(a.updatedAt).unix() - moment(b.updatedAt).unix(),
     },
   ];
 
@@ -85,16 +140,32 @@ const Distribution = () => {
   return (
     <div>
       <h1>Current Stocks</h1>
-      <Button
-        onClick={generatePDF}
-        type="primary"
-        style={{ marginBottom: "20px" }}
-      >
-        Download Report
-      </Button>
+      <div style={{ marginBottom: 16 }}>
+        <Input
+          placeholder="Search by Item Code"
+          value={searchCode}
+          onChange={(e) => setSearchCode(e.target.value)}
+          style={{ width: 200, marginRight: 16 }}
+        />
+        <Select
+          style={{ width: 200 }}
+          placeholder="Filter by Supplier Code"
+          allowClear
+          onChange={(value) => setSelectedSupplierCode(value)}
+        >
+          {supplierCodes.map((code) => (
+            <Option key={code} value={code}>
+              {code}
+            </Option>
+          ))}
+        </Select>
+        <Button onClick={generatePDF} type="primary" style={{ marginLeft: 16 }}>
+          Download Report
+        </Button>
+      </div>
       <Table
         columns={columns}
-        dataSource={distributions}
+        dataSource={filteredDistributions}
         rowKey="id"
         pagination={false}
       />

@@ -115,9 +115,9 @@ const ItemManagement = () => {
       dataIndex: "discountPercentage2",
       key: "discountPercentage2",
     },
-    { title: "Unit Price", dataIndex: "unitPrice", key: "unitPrice" },
+    { title: "Retail Price", dataIndex: "unitPrice", key: "unitPrice" },
     {
-      title: "Second Price",
+      title: "Customer Discount",
       dataIndex: "secondPrice",
       key: "abc",
       render: (_, record) => {
@@ -130,7 +130,7 @@ const ItemManagement = () => {
       },
     },
     {
-      title: "Wholesale Price",
+      title: "Distributed Discount",
       dataIndex: "wholesalePrice",
       key: "wholesalePrice",
     },

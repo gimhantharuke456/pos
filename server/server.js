@@ -8,6 +8,7 @@ const distributionRoutes = require("./routes/distributionRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const returnRoutes = require("./routes/returnsRoutes");
 const app = express();
 
 app.use(cors());
@@ -22,6 +23,7 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/orders", orderRoutes);
 
 app.use("/api/reports", reportRoutes);
+app.use("/api/returns", returnRoutes);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

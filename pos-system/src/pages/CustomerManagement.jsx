@@ -14,21 +14,40 @@ import { DeleteOutlined } from "@ant-design/icons";
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [searchCode, setSearchCode] = useState("");
+  const [searchName, setSearchName] = useState("");
   const [form] = Form.useForm();
 
   useEffect(() => {
     fetchCustomers();
   }, []);
 
+  useEffect(() => {
+    filterCustomers();
+  }, [customers, searchCode, searchName]);
+
   const fetchCustomers = async () => {
     try {
       const response = await customerService.getAllCustomers();
       setCustomers(response.data);
+      setFilteredCustomers(response.data);
     } catch (error) {
       message.error("Failed to fetch customers");
     }
+  };
+
+  const filterCustomers = () => {
+    const filtered = customers.filter(
+      (customer) =>
+        customer.customerCode
+          .toLowerCase()
+          .includes(searchCode.toLowerCase()) &&
+        customer.name.toLowerCase().includes(searchName.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
   };
 
   const handleAddOrEdit = async (values) => {
@@ -138,10 +157,22 @@ const CustomerManagement = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={() => setIsModalVisible(true)}>
-        Add Customer
-      </Button>
-      <Table columns={columns} dataSource={customers} rowKey="id" />
+      <Space style={{ marginBottom: 16 }}>
+        <Input
+          placeholder="Search by Customer Code"
+          value={searchCode}
+          onChange={(e) => setSearchCode(e.target.value)}
+        />
+        <Input
+          placeholder="Search by Customer Name"
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+        />
+        <Button type="primary" onClick={() => setIsModalVisible(true)}>
+          Add Customer
+        </Button>
+      </Space>
+      <Table columns={columns} dataSource={filteredCustomers} rowKey="id" />
 
       <Modal
         title={editingCustomer ? "Edit Customer" : "Add Customer"}

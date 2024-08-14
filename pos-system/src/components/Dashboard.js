@@ -17,6 +17,7 @@ import Distribution from "../pages/Distribution";
 import CustomerManagement from "../pages/CustomerManagement";
 import Orders from "../pages/Orders";
 import Reports from "./Reports";
+import Returns from "./Returns";
 
 const { Sider, Content } = Layout;
 
@@ -101,7 +102,7 @@ const Dashboard = () => {
             key="9"
             icon={<SettingOutlined />}
           >
-            Settings
+            Returns
           </Menu.Item>
         </Menu>
       </Sider>
@@ -116,6 +117,7 @@ const Dashboard = () => {
             {activeIndex === 6 && <CustomerManagement />}
             {activeIndex === 7 && <Orders />}
             {activeIndex === 8 && <Reports />}
+            {activeIndex === 9 && <Returns />}
           </div>
         </Content>
       </Layout>
