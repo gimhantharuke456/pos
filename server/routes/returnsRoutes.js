@@ -1,44 +1,76 @@
-// returnsRoutes.js
+// routes/returnRoutes.js
 const express = require("express");
 const router = express.Router();
-const returnsService = require("../services/returnsService");
+const returnService = require("../services/returnsService");
 
-router.post("/", (req, res) => {
+// Create customer return
+router.post("/customer", async (req, res) => {
   try {
-    const returnId = returnsService.createReturn(req.body);
+    const { orderId, returnItems } = req.body;
+    const result = await returnService.createCustomerReturn(
+      orderId,
+      returnItems
+    );
     res
       .status(201)
-      .json({ id: returnId, message: "Return created successfully" });
+      .json({ id: result, message: "Customer return created successfully" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 });
 
-router.get("/", (req, res) => {
-  try {
-    const returns = returnsService.getReturns();
-    res.json(returns);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+// Get all customer returns
+router.get("/customer", (req, res) => {
+  const customerReturns = returnService.getCustomerReturns();
+  res.json(customerReturns);
+});
+
+// Get customer return by id
+router.get("/customer/:id", (req, res) => {
+  const customerReturn = returnService.getCustomerReturnById(req.params.id);
+  if (customerReturn) {
+    res.json(customerReturn);
+  } else {
+    res.status(404).json({ error: "Customer return not found" });
   }
 });
 
-router.get("/status/:status", (req, res) => {
+// Create supplier return
+router.post("/supplier", async (req, res) => {
   try {
-    const returns = returnsService.getReturnsByStatus(req.params.status);
-    res.json(returns);
+    const { supplierId, returnItems } = req.body;
+    const result = await returnService.createSupplierReturn(
+      supplierId,
+      returnItems
+    );
+    res
+      .status(201)
+      .json({ id: result, message: "Supplier return created successfully" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 });
 
-router.get("/count", (req, res) => {
-  try {
-    const counts = returnsService.getReturnCountByItem();
-    res.json(counts);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+// Get all supplier returns
+router.get("/supplier", (req, res) => {
+  const supplierReturns = returnService.getSupplierReturns();
+  res.json(supplierReturns);
+});
+
+// Get supplier return by id
+router.get("/supplier/:id", (req, res) => {
+  const supplierReturn = returnService.getSupplierReturnById(req.params.id);
+  if (supplierReturn) {
+    res.json(supplierReturn);
+  } else {
+    res.status(404).json({ error: "Supplier return not found" });
   }
+});
+
+// Get non-salable items
+router.get("/non-salable", (req, res) => {
+  const nonSalableItems = returnService.getNonSalableItems();
+  res.json(nonSalableItems);
 });
 
 module.exports = router;

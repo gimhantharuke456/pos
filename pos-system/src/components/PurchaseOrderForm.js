@@ -17,10 +17,13 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
   const [form] = Form.useForm();
   const [suppliers, setSuppliers] = useState([]);
   const [items, setItems] = useState([]);
+  const [purchaseOrderCode, setPurchaseOrderCode] = useState("");
+  const [filetedItems, setFilteredItems] = useState([]);
 
   useEffect(() => {
     fetchSuppliers();
     fetchItems();
+    generatePurchaseOrderCode();
   }, []);
 
   useEffect(() => {
@@ -53,6 +56,21 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
     }
   };
 
+  const generatePurchaseOrderCode = () => {
+    const currentDate = moment().format("YYYYMMDD");
+    const uniqueNumber = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, "0");
+    const generatedCode = `PO-${currentDate}-${uniqueNumber}`;
+    setPurchaseOrderCode(generatedCode);
+    form.setFieldsValue({ purchaseOrderCode: generatedCode });
+  };
+
+  const onSupplierCheck = (id) => {
+    console.log(id);
+    setFilteredItems(items.filter((item) => item.supplierId === id));
+  };
+
   const handleSubmit = async (values) => {
     const formattedValues = {
       ...values,
@@ -74,7 +92,6 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
   const columns = [
     { title: "Item Code", dataIndex: "itemCode", key: "itemCode" },
     { title: "Item Name", dataIndex: "itemName", key: "itemName" },
-
     {
       title: "Instock Amount",
       dataIndex: "inStockAmount",
@@ -83,7 +100,6 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
         return <InstockAmount id={record.id} />;
       },
     },
-
     { title: "First Margin", dataIndex: "secondPrice", key: "secondPrice" },
     {
       title: "Wholesale Price",
@@ -116,14 +132,18 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
         label="Purchase Order Code"
         rules={[{ required: true }]}
       >
-        <Input />
+        <Input disabled value={purchaseOrderCode} />
       </Form.Item>
       <Form.Item
         name="supplierId"
         label="Supplier"
         rules={[{ required: true }]}
       >
-        <Select>
+        <Select
+          onChange={(val) => {
+            onSupplierCheck(val);
+          }}
+        >
           {suppliers.map((supplier) => (
             <Select.Option key={supplier.id} value={supplier.id}>
               {supplier.name}
@@ -139,7 +159,7 @@ const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel }) => {
         <DatePicker />
       </Form.Item>
       <Table
-        dataSource={items}
+        dataSource={filetedItems}
         columns={columns}
         rowKey="id"
         pagination={false}

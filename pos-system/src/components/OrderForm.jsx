@@ -7,6 +7,7 @@ import {
   Table,
   Input,
   InputNumber,
+  DatePicker,
   Spin,
 } from "antd";
 import customerService from "../services/customerService";
@@ -193,6 +194,17 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         label="Order Code"
       >
         <Input placeholder="Order Code" />
+      </Form.Item>
+      <Form.Item
+        rules={[{ required: true }]}
+        name="orderDate"
+        label="Order Date"
+      >
+        <DatePicker
+          placeholder="Select Order Date"
+          format="YYYY-MM-DD"
+          style={{ width: "100%" }}
+        />
       </Form.Item>
       <Form.Item
         name="customerId"

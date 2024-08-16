@@ -19,7 +19,7 @@ const itemService = {
     return db
       .prepare(
         `
-      SELECT i.itemCode, i.id, i.itemName, i.unitType, i.unitPrice, i.secondPrice,i.discountPercentage1, i.discountPercentage2, i.wholesalePrice, s.name as supplier
+      SELECT i.itemCode, i.id, i.itemName, i.unitType, i.unitPrice, i.secondPrice,i.discountPercentage1, i.discountPercentage2, i.wholesalePrice, s.name as supplier,s.id as supplierId
       FROM items i
       LEFT JOIN suppliers s ON i.supplierId = s.id
       WHERE i.deleteStatus is FALSE

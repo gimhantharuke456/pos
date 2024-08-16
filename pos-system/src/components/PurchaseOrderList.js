@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Modal, message, Popconfirm } from "antd";
+import {
+  Table,
+  Button,
+  Modal,
+  message,
+  Popconfirm,
+  Input,
+  Row,
+  Col,
+} from "antd";
 import { purchaseOrderService } from "../services/purchaseOrderService";
 import PurchaseOrderForm from "./PurchaseOrderForm";
 import { EyeFilled, DeleteFilled } from "@ant-design/icons";
@@ -7,21 +16,35 @@ import PurchaseOrderReport from "./PurchaseOrderReport";
 
 const PurchaseOrderList = () => {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedPO, setSelectedPO] = useState(null);
   const [isViewOrder, setIsViewOrder] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchPurchaseOrders();
   }, []);
 
+  useEffect(() => {
+    handleSearch();
+  }, [searchTerm, purchaseOrders]);
+
   const fetchPurchaseOrders = async () => {
     try {
       const response = await purchaseOrderService.getAllPurchaseOrders();
       setPurchaseOrders(response.data);
+      setFilteredOrders(response.data);
     } catch (error) {
       message.error("Failed to fetch purchase orders");
     }
+  };
+
+  const handleSearch = () => {
+    const filtered = purchaseOrders.filter((order) =>
+      order.purchaseOrderCode.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredOrders(filtered);
   };
 
   const handleCreate = () => {
@@ -67,10 +90,30 @@ const PurchaseOrderList = () => {
   };
 
   const columns = [
-    { title: "Order Code", dataIndex: "purchaseOrderCode", key: "id" },
-    { title: "Order Date", dataIndex: "orderDate", key: "orderDate" },
-    { title: "Status", dataIndex: "status", key: "status" },
-    { title: "Supplier", dataIndex: "supplierName", key: "supplierName" },
+    {
+      title: "Order Code",
+      dataIndex: "purchaseOrderCode",
+      key: "id",
+      sorter: (a, b) => a.purchaseOrderCode.localeCompare(b.purchaseOrderCode),
+    },
+    {
+      title: "Order Date",
+      dataIndex: "orderDate",
+      key: "orderDate",
+      sorter: (a, b) => new Date(a.orderDate) - new Date(b.orderDate),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      sorter: (a, b) => a.status.localeCompare(b.status),
+    },
+    {
+      title: "Supplier",
+      dataIndex: "supplierName",
+      key: "supplierName",
+      sorter: (a, b) => a.supplierName.localeCompare(b.supplierName),
+    },
     {
       title: "Actions",
       key: "actions",
@@ -99,14 +142,21 @@ const PurchaseOrderList = () => {
 
   return (
     <div>
-      <Button
-        onClick={handleCreate}
-        type="primary"
-        style={{ marginBottom: 16 }}
-      >
-        Create Purchase Order
-      </Button>
-      <Table columns={columns} dataSource={purchaseOrders} rowKey="id" />
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={8}>
+          <Input
+            placeholder="Search by order code"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </Col>
+        <Col span={16}>
+          <Button onClick={handleCreate} type="primary">
+            Create Purchase Order
+          </Button>
+        </Col>
+      </Row>
+      <Table columns={columns} dataSource={filteredOrders} rowKey="id" />
       <Modal
         width={1200}
         title={selectedPO ? "Edit Purchase Order" : "Create Purchase Order"}

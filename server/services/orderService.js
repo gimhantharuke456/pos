@@ -3,26 +3,30 @@ const db = initializeDb();
 
 const orderService = {
   // Create a new order
-  createOrder: async (customerId, paymentMethod, items, totalAmount) => {
+  createOrder: async (
+    customerId,
+    paymentMethod,
+    items,
+    totalAmount,
+    orderDate,
+    orderCode
+  ) => {
     return db.transaction(async () => {
-      // Calculate total amount
-      for (const item of items) {
-        const itemData = await db
-          .prepare("SELECT * FROM items WHERE id = ?")
-          .get(item.id);
-      }
-
-      // Apply discount for cash payments
-      let discount = 0;
-      if (paymentMethod === "cash") {
-      }
-
       // Insert order
       const orderInfo = await db
         .prepare(
-          "INSERT INTO orders (customerId, paymentMethod, totalAmount, discount,  paidAmount, paymentStatus) VALUES (?, ?, ?, ?, ?, ?)"
+          "INSERT INTO orders (customerId, paymentMethod, totalAmount, discount,  paidAmount, paymentStatus,orderDate,orderCode) VALUES (?, ?, ?, ?, ?, ?,?,?)"
         )
-        .run(customerId, paymentMethod, totalAmount, discount, 0, "pending");
+        .run(
+          customerId,
+          paymentMethod,
+          totalAmount,
+          discount,
+          0,
+          "pending",
+          orderDate,
+          orderCode
+        );
       const orderId = orderInfo.lastInsertRowid;
 
       // Insert order items
@@ -86,7 +90,7 @@ const orderService = {
   getAllOrders: async () => {
     const orders = await db
       .prepare(
-        `SELECT o.*, c.name as customerName 
+        `SELECT o.*, c.name as customerName , c.customerCode 
          FROM orders o 
          JOIN customers c ON o.customerId = c.id 
          WHERE o.deleteStatus = false`
@@ -96,7 +100,7 @@ const orderService = {
     for (const order of orders) {
       order.items = await db
         .prepare(
-          `SELECT oi.*, i.itemName 
+          `SELECT oi.*, i.* 
            FROM orderItems oi 
            JOIN items i ON oi.itemId = i.id 
            WHERE oi.orderId = ?`

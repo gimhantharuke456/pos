@@ -6,8 +6,14 @@ const grnService = require("../services/grnService");
 // Create a new GRN
 router.post("/", async (req, res) => {
   try {
-    const { purchaseOrderId, receiveDate, items } = req.body;
-    const result = grnService.createGRN(purchaseOrderId, receiveDate, items);
+    const { purchaseOrderId, receiveDate, items, goodReceivedNoteCode } =
+      req.body;
+    const result = grnService.createGRN(
+      purchaseOrderId,
+      receiveDate,
+      items,
+      goodReceivedNoteCode
+    );
     res.status(201).json({
       message: "GRN created successfully",
       grnId: result.grnId,

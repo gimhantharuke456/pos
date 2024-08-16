@@ -9,10 +9,18 @@ const OrderForm = ({ onSubmit, initialValues }) => {
   const [customers, setCustomers] = useState([]);
   const [items, setItems] = useState([]);
   const [form] = Form.useForm();
+  const [orderCode, setOrderCode] = useState("");
+
+  const generatCode = () => {
+    const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `CO-${currentDate}-${randomNum}`;
+  };
 
   useEffect(() => {
     fetchCustomers();
     fetchItems();
+    setOrderCode(generatCode());
   }, []);
 
   const fetchCustomers = async () => {
@@ -35,7 +43,19 @@ const OrderForm = ({ onSubmit, initialValues }) => {
 
   const handleSubmit = (values) => {
     const orderedItems = items.filter((item) => item.quantity > 0);
-    onSubmit({ ...values, items: orderedItems });
+    const totalAmount = orderedItems.reduce(
+      (total, item) =>
+        total +
+        (item.secondPrice - (item.wholesalePrice / 100) * item.discount) *
+          item.quantity,
+      0
+    );
+    onSubmit({
+      ...values,
+      items: orderedItems,
+      orderCode: orderCode,
+      totalAmount,
+    });
 
     // Clean all inputs after creating order
     form.resetFields();
@@ -115,12 +135,8 @@ const OrderForm = ({ onSubmit, initialValues }) => {
       initialValues={initialValues}
       layout="vertical"
     >
-      <Form.Item
-        rules={[{ required: true }]}
-        name="orderCode"
-        label="Order Code"
-      >
-        <Input placeholder="Order Code" />
+      <Form.Item name="orderCode" label="Invoice Number">
+        <Input placeholder={orderCode} />
       </Form.Item>
       <Form.Item
         name="customerId"
@@ -139,6 +155,7 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         name="paymentMethod"
         label="Payment Method"
         rules={[{ required: true }]}
+        ß
       >
         <Select placeholder="Select a payment method">
           <Option value="cash">Cash</Option>

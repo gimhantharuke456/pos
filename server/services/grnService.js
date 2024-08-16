@@ -14,15 +14,15 @@ const formatDate = (date) => {
 };
 
 const grnService = {
-  createGRN: (purchaseOrderId, receiveDate, items) => {
+  createGRN: (purchaseOrderId, receiveDate, items, goodReceivedNoteCode) => {
     let newPOId = null;
     const transaction = db.transaction(async () => {
       // Create GRN
       const grnInfo = db
         .prepare(
-          "INSERT INTO goodsReceivedNotes (purchaseOrderId, receiveDate, status) VALUES (?, ?, ?)"
+          "INSERT INTO goodsReceivedNotes (purchaseOrderId, receiveDate, status,goodReceivedNoteCode) VALUES (?, ?, ?,?)"
         )
-        .run(purchaseOrderId, receiveDate, "PENDING");
+        .run(purchaseOrderId, receiveDate, "PENDING", goodReceivedNoteCode);
 
       const grnId = grnInfo.lastInsertRowid;
 
@@ -112,12 +112,12 @@ const grnService = {
   getAllGRNs: () => {
     return db
       .prepare(
-        `SELECT grn.*, po.supplierId, s.name as supplierName
-         FROM goodsReceivedNotes grn
-         JOIN purchaseOrders po ON grn.purchaseOrderId = po.id
-         JOIN suppliers s ON po.supplierId = s.id
-         WHERE grn.status <> 'DELETED'
-         `
+        `SELECT grn.*, po.supplierId, s.name as supplierName, s.supplierCode,po.purchaseOrderCode
+       FROM goodsReceivedNotes grn
+       JOIN purchaseOrders po ON grn.purchaseOrderId = po.id
+       JOIN suppliers s ON po.supplierId = s.id
+       WHERE grn.status <> 'DELETED'
+       `
       )
       .all();
   },

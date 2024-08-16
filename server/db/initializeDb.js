@@ -72,13 +72,14 @@ const initializeDb = () => {
     CREATE TABLE IF NOT EXISTS goodsReceivedNotes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       purchaseOrderId INTEGER UNIQUE,
-      goodReceivedNoteCode TEXT,
+      goodReceivedNoteCode TEXT NOT NULL UNIQUE,
       receiveDate TEXT,
       status TEXT DEFAULT 'PENDING',
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (purchaseOrderId) REFERENCES purchaseOrders(id)
-    )
+    );
+   
   `);
 
   db.exec(`
@@ -92,7 +93,7 @@ const initializeDb = () => {
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (goodsReceivedNoteId) REFERENCES goodsReceivedNotes(id),
       FOREIGN KEY (itemId) REFERENCES items(id)
-    )
+    );
   `);
 
   db.exec(`
@@ -124,8 +125,10 @@ const initializeDb = () => {
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       customerId INTEGER NOT NULL,
+
       paymentMethod TEXT CHECK(paymentMethod IN ('cash', 'cheque', 'credit')) NOT NULL,
       totalAmount REAL NOT NULL,
+      orderDate DATETIME DEFAULT CURRENT_TIMESTAMP,
       discount REAL DEFAULT 0,
       deleteStatus BOOLEAN DEFAULT FALSE,
       paymentStatus TEXT CHECK(paymentStatus IN ('pending', 'accepted', 'partially paid')) NOT NULL DEFAULT 'pending',
@@ -134,8 +137,26 @@ const initializeDb = () => {
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (customerId) REFERENCES customers(id)
-    )
+    );
+
   `);
+
+  const columnExists = db
+    .prepare(
+      `
+    SELECT COUNT(*) AS cnt 
+    FROM pragma_table_info('orders') 
+    WHERE name = 'orderCode';
+  `
+    )
+    .get();
+
+  if (columnExists.cnt === 0) {
+    db.exec(`
+      ALTER TABLE orders 
+      ADD COLUMN orderCode TEXT ;
+    `);
+  }
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS orderItems (
@@ -154,16 +175,55 @@ const initializeDb = () => {
   `);
 
   db.exec(`
-    CREATE TABLE IF NOT EXISTS returns (
+    CREATE TABLE IF NOT EXISTS customerReturns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       orderId INTEGER NOT NULL,
+      returnDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+      totalAmount REAL NOT NULL,
+      status TEXT CHECK(status IN ('pending', 'processed')) NOT NULL DEFAULT 'pending',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (orderId) REFERENCES orders(id)
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS customerReturnItems (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customerReturnId INTEGER NOT NULL,
+      itemId INTEGER NOT NULL,
+      quantity INTEGER NOT NULL,
+      isSalable BOOLEAN NOT NULL,
+      reason TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (customerReturnId) REFERENCES customerReturns(id),
+      FOREIGN KEY (itemId) REFERENCES items(id)
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS supplierReturns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplierId INTEGER NOT NULL,
+      returnDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status TEXT CHECK(status IN ('pending', 'processed')) NOT NULL DEFAULT 'pending',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (supplierId) REFERENCES suppliers(id)
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS supplierReturnItems (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplierReturnId INTEGER NOT NULL,
       itemId INTEGER NOT NULL,
       quantity INTEGER NOT NULL,
       reason TEXT,
-      status TEXT CHECK(status IN ('reusable', 'non-reusable')) NOT NULL,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (orderId) REFERENCES orders(id),
+      FOREIGN KEY (supplierReturnId) REFERENCES supplierReturns(id),
       FOREIGN KEY (itemId) REFERENCES items(id)
     )
   `);

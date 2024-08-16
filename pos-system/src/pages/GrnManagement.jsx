@@ -9,12 +9,7 @@ import {
   message,
   Space,
 } from "antd";
-import {
-  PlusOutlined,
-  FileTextOutlined,
-  DeleteFilled,
-  EyeFilled,
-} from "@ant-design/icons";
+import { PlusOutlined, FileTextOutlined, EyeFilled } from "@ant-design/icons";
 import grnService from "../services/grnService";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -30,11 +25,21 @@ const GrnManagement = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [showGrnReportModal, setShowGrnReportModal] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [poSearchText, setPoSearchText] = useState(""); // New state for purchaseOrderCode search
   const [form] = Form.useForm();
+  const [grnCode, setGrnCode] = useState("");
+
+  const generateGrnCode = () => {
+    const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `GRN-${currentDate}-${randomNum}`;
+  };
 
   useEffect(() => {
     fetchGRNs();
     fetchPurchaseOrders();
+    setGrnCode(generateGrnCode());
   }, []);
 
   const fetchGRNs = async () => {
@@ -51,7 +56,6 @@ const GrnManagement = () => {
   const fetchPurchaseOrders = async () => {
     try {
       const response = await purchaseOrderService.getAllPurchaseOrders();
-
       setPurchaseOrders(response.data?.filter((po) => po.status === "PENDING"));
     } catch (error) {
       message.error("Failed to fetch Purchase Orders");
@@ -78,7 +82,7 @@ const GrnManagement = () => {
 
   const handleCreateGRN = async (values) => {
     try {
-      await grnService.createGRN(values);
+      await grnService.createGRN({ ...values, goodReceivedNoteCode: grnCode });
       message.success("GRN created successfully");
       setModalVisible(false);
       form.resetFields();
@@ -107,7 +111,6 @@ const GrnManagement = () => {
       grn.id,
       grn.purchaseOrderId,
       grn.receiveDate,
-
       grn.supplierName,
     ]);
 
@@ -121,15 +124,37 @@ const GrnManagement = () => {
   };
 
   const columns = [
-    { title: "GRN ID", dataIndex: "id", key: "id" },
     {
-      title: "Purchase Order ID",
-      dataIndex: "purchaseOrderId",
-      key: "purchaseOrderId",
+      title: "GRN Code",
+      dataIndex: "goodReceivedNoteCode",
+      key: "goodReceivedNoteCode",
+      sorter: (a, b) =>
+        a.goodReceivedNoteCode.localeCompare(b.goodReceivedNoteCode),
     },
-    { title: "Receive Date", dataIndex: "receiveDate", key: "receiveDate" },
-    { title: "Status", dataIndex: "status", key: "status" },
-    { title: "Supplier", dataIndex: "supplierName", key: "supplierName" },
+    {
+      title: "Purchase Order Code",
+      dataIndex: "purchaseOrderCode",
+      key: "purchaseOrderCode",
+      sorter: (a, b) => a.purchaseOrderId - b.purchaseOrderId,
+    },
+    {
+      title: "Receive Date",
+      dataIndex: "receiveDate",
+      key: "receiveDate",
+      sorter: (a, b) => new Date(a.receiveDate) - new Date(b.receiveDate),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      sorter: (a, b) => a.status.localeCompare(b.status),
+    },
+    {
+      title: "Supplier",
+      dataIndex: "supplierName",
+      key: "supplierName",
+      sorter: (a, b) => a.supplierName.localeCompare(b.supplierName),
+    },
     {
       title: "Actions",
       dataIndex: "id",
@@ -144,13 +169,6 @@ const GrnManagement = () => {
             }}
             icon={<EyeFilled />}
           ></Button>
-          {/* <Button
-            onClick={() => {
-              handleUpdateStatus(id, "DELETED");
-            }}
-            danger
-            icon={<DeleteFilled />}
-          ></Button> */}
         </>
       ),
     },
@@ -171,11 +189,38 @@ const GrnManagement = () => {
           Generate Report
         </Button>
       </Space>
+      <Space style={{ marginBottom: 16 }}>
+        <Input.Search
+          placeholder="Search by GRN Code"
+          onSearch={(value) => setSearchText(value)}
+          style={{ width: 200 }}
+        />
+        <Input.Search
+          placeholder="Search by Purchase Order Code"
+          onSearch={(value) => setPoSearchText(value)}
+          style={{ width: 250 }}
+        />
+      </Space>
       <Table
         columns={columns}
-        dataSource={grns}
+        dataSource={grns.filter((grn) => {
+          const matchesGrnCode = grn.goodReceivedNoteCode
+            ? grn.goodReceivedNoteCode
+                .toLowerCase()
+                .includes(searchText.toLowerCase())
+            : true;
+          const matchesPoCode = grn.purchaseOrderCode
+            ? grn.purchaseOrderCode
+                .toLowerCase()
+                .includes(poSearchText.toLowerCase())
+            : true;
+          return matchesGrnCode && matchesPoCode;
+        })}
         loading={loading}
         rowKey="id"
+        onChange={(pagination, filters, sorter) => {
+          console.log("Table changed:", pagination, filters, sorter);
+        }}
       />
 
       <Modal
@@ -186,6 +231,9 @@ const GrnManagement = () => {
         footer={null}
       >
         <Form form={form} onFinish={handleCreateGRN} layout="vertical">
+          <Form.Item name="goodReceivedNoteCode" label="GRN Code">
+            <Input disabled value={grnCode} placeholder={grnCode} />
+          </Form.Item>
           <Form.Item
             name="purchaseOrderId"
             label="Purchase Order"
@@ -225,35 +273,39 @@ const GrnManagement = () => {
                       <Form.Item
                         {...restField}
                         name={[name, "itemName"]}
-                        label="Item Name"
+                        label="Item"
                       >
                         <Input disabled />
                       </Form.Item>
                       <Form.Item
                         {...restField}
                         name={[name, "orderedQuantity"]}
-                        label="Ordered Quantity"
+                        label="Ordered Qty"
                       >
                         <Input disabled />
                       </Form.Item>
                       <Form.Item
-                        label="Recieved Quantity"
                         {...restField}
                         name={[name, "receivedQuantity"]}
-                        rules={[
-                          {
-                            required: true,
-                            message: "Missing received quantity",
-                          },
-                        ]}
+                        label="Received Qty"
                       >
-                        <Input placeholder="Received Quantity" type="number" />
+                        <Input type="number" min={1} />
                       </Form.Item>
+                      <Button onClick={() => remove(name)}>Delete</Button>
                     </Space>
                   ))}
                 </>
               )}
             </Form.List>
+          </Form.Item>
+          <Form.Item name="status" label="Status">
+            <Select defaultValue="PENDING">
+              <Option value="PENDING">Pending</Option>
+              <Option value="COMPLETED">Completed</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="supplierName" label="Supplier">
+            <Input disabled value={selectedPO?.supplierName} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
@@ -262,23 +314,16 @@ const GrnManagement = () => {
           </Form.Item>
         </Form>
       </Modal>
-      {selectedPO && (
-        <Modal
-          width={1200}
-          title="GRN Report"
-          open={showGrnReportModal}
-          onCancel={() => setShowGrnReportModal(false)}
-          footer={null}
-        >
-          <GrnReport
-            grnId={selectedPO}
-            refresh={() => {
-              setShowGrnReportModal(false);
-              fetchGRNs();
-            }}
-          />
-        </Modal>
-      )}
+
+      <Modal
+        width={1000}
+        title="GRN Report"
+        open={showGrnReportModal}
+        onCancel={() => setShowGrnReportModal(false)}
+        footer={null}
+      >
+        <GrnReport grnId={selectedPO} />
+      </Modal>
     </div>
   );
 };

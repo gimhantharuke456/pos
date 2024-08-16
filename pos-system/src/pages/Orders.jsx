@@ -1,15 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, message, Select, InputNumber, Row } from "antd";
+import {
+  Table,
+  Button,
+  Modal,
+  message,
+  Select,
+  InputNumber,
+  Row,
+  Input,
+} from "antd";
 import orderService from "../services/orderService";
-import OrderForm from "../components/OrderForm";
 import {
   DeleteOutlined,
   EyeFilled,
   MoneyCollectOutlined,
 } from "@ant-design/icons";
+import moment from "moment";
+import OrderForm from "../components/ItemSelector";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentOrder, setCurrentOrder] = useState(null);
@@ -19,12 +30,14 @@ const Orders = () => {
   const [selectedOrderForPaidAmount, setSelectedOrderForPaidAmount] =
     useState(null);
   const [newPaidAmount, setNewPaidAmount] = useState(0);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const data = await orderService.getAllOrders();
         setOrders(data);
+        setFilteredOrders(data);
       } catch (error) {
         message.error("Failed to fetch orders");
       } finally {
@@ -33,6 +46,14 @@ const Orders = () => {
     };
     fetchOrders();
   }, []);
+
+  const handleSearch = (value) => {
+    setSearchText(value);
+    const filtered = orders.filter((order) =>
+      order.customerCode.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredOrders(filtered);
+  };
 
   const handleCreateOrder = () => {
     setCurrentOrder(null);
@@ -43,6 +64,9 @@ const Orders = () => {
     try {
       await orderService.deleteOrder(id);
       setOrders((prevOrders) => prevOrders.filter((order) => order.id !== id));
+      setFilteredOrders((prevOrders) =>
+        prevOrders.filter((order) => order.id !== id)
+      );
       message.success("Order deleted successfully");
     } catch (error) {
       message.error("Failed to delete order");
@@ -53,14 +77,17 @@ const Orders = () => {
     try {
       if (currentOrder) {
         await orderService.updateOrder(currentOrder.id, order);
-        setOrders((prevOrders) =>
-          prevOrders.map((o) => (o.id === currentOrder.id ? order : o))
+        const updatedOrders = orders.map((o) =>
+          o.id === currentOrder.id ? order : o
         );
+        setOrders(updatedOrders);
+        setFilteredOrders(updatedOrders);
         message.success("Order updated successfully");
       } else {
         await orderService.createOrder(order);
         const data = await orderService.getAllOrders();
         setOrders(data);
+        setFilteredOrders(data);
         message.success("Order created successfully");
       }
       setIsModalVisible(false);
@@ -96,6 +123,7 @@ const Orders = () => {
             : order
         );
         setOrders(updatedOrders);
+        setFilteredOrders(updatedOrders);
         setUpdatePaidAmountModalVisible(false);
         message.success("Paid amount updated successfully");
       } catch (error) {
@@ -111,6 +139,7 @@ const Orders = () => {
         order.id === orderId ? { ...order, paymentStatus: status } : order
       );
       setOrders(updatedOrders);
+      setFilteredOrders(updatedOrders);
       message.success("Payment status updated successfully");
     } catch (error) {
       message.error("Failed to update payment status");
@@ -119,15 +148,21 @@ const Orders = () => {
 
   const columns = [
     {
-      title: "Customer Name",
-      dataIndex: "customerName",
+      title: "Invoice Number",
+      dataIndex: "orderCode",
+      key: "orderCode",
+    },
+    {
+      title: "Customer Code",
+      dataIndex: "customerCode",
       key: "customerName",
     },
-    // {
-    //   title: "Order Date",
-    //   dataIndex: "orderDate",
-    //   key: "orderDate",
-    // },
+    {
+      title: "Order Date",
+      dataIndex: "orderDate",
+      key: "orderDate",
+      render: (date) => moment(date).format("YYYY-MM-DD"),
+    },
     {
       title: "Payment Method",
       dataIndex: "paymentMethod",
@@ -190,12 +225,19 @@ const Orders = () => {
 
   return (
     <div>
+      <Input.Search
+        placeholder="Search by Customer Code"
+        value={searchText}
+        onChange={(e) => handleSearch(e.target.value)}
+        onSearch={handleSearch}
+        style={{ width: 300, marginBottom: 20 }}
+      />
       <Button type="primary" onClick={handleCreateOrder}>
         Create Order
       </Button>
       <Table
         columns={columns}
-        dataSource={orders}
+        dataSource={filteredOrders}
         rowKey="id"
         loading={loading}
         style={{ marginTop: 20 }}
@@ -224,7 +266,7 @@ const Orders = () => {
         />
       </Modal>
       <Modal
-        width={800}
+        width={1200}
         title="Order Items"
         open={viewOrderItems !== null}
         onCancel={() => setViewOrderItems(null)}
@@ -233,9 +275,9 @@ const Orders = () => {
         <Table
           columns={[
             {
-              title: "Item Name",
-              dataIndex: "itemName",
-              key: "itemName",
+              title: "Item Code",
+              dataIndex: "itemCode",
+              key: "itemCode",
             },
             {
               title: "Quantity",
@@ -247,29 +289,13 @@ const Orders = () => {
               dataIndex: "itemPrice",
               key: "itemPrice",
             },
-            {
-              title: "Discount (%)",
-              dataIndex: "itemDiscount",
-              key: "itemDiscount",
-            },
-            {
-              title: "Discounted Price",
-              dataIndex: "asda",
-              key: "discountedPrice",
-              render: (text, record) => (
-                <>{record.itemPrice - record.itemDiscount}</>
-              ),
-            },
+
             {
               title: "Total Price",
               dataIndex: "itemPrice",
               key: "totalPrice",
               render: (text, record) => (
-                <>
-                  {record.itemPrice *
-                    record.quantity *
-                    (1 - record.itemDiscount / 100)}
-                </>
+                <>{record.itemPrice * record.quantity}</>
               ),
             },
           ]}

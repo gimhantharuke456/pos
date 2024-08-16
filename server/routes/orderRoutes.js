@@ -5,12 +5,21 @@ const orderService = require("../services/orderService");
 // Create a new order
 router.post("/", async (req, res) => {
   try {
-    const { customerId, paymentMethod, items, totalAmount } = req.body;
+    const {
+      customerId,
+      paymentMethod,
+      items,
+      totalAmount,
+      orderDate,
+      orderCode,
+    } = req.body;
     const orderId = await orderService.createOrder(
       customerId,
       paymentMethod,
       items,
-      totalAmount
+      totalAmount,
+      orderDate,
+      orderCode
     );
     res
       .status(201)

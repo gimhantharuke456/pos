@@ -9,13 +9,14 @@ import {
   Modal,
   Popconfirm,
   Select,
+  Row,
+  Col,
 } from "antd";
 import { jsPDF } from "jspdf";
 import {
   addItem,
   deleteItem,
   getAllItems,
-  getItemByName,
   updateItem,
 } from "../services/itemService";
 import supplierService from "../services/supplierService";
@@ -24,8 +25,10 @@ const { Option } = Select;
 
 const ItemManagement = () => {
   const [items, setItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
+  const [codeSearch, setCodeSearch] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -36,9 +39,14 @@ const ItemManagement = () => {
     fetchSuppliers();
   }, []);
 
+  useEffect(() => {
+    handleSearch();
+  }, [nameSearch, codeSearch, items]);
+
   const fetchItems = async () => {
     const result = await getAllItems();
     setItems(result);
+    setFilteredItems(result);
   };
 
   const fetchSuppliers = async () => {
@@ -46,10 +54,13 @@ const ItemManagement = () => {
     setSuppliers(result);
   };
 
-  const handleSearch = async (event) => {
-    setSearchTerm(event.target.value);
-    const result = await getItemByName(event.target.value);
-    setItems(result);
+  const handleSearch = () => {
+    const filtered = items.filter(
+      (item) =>
+        item.itemName.toLowerCase().includes(nameSearch.toLowerCase()) &&
+        item.itemCode.toLowerCase().includes(codeSearch.toLowerCase())
+    );
+    setFilteredItems(filtered);
   };
 
   const handleAddOrUpdateItem = async (values) => {
@@ -88,7 +99,7 @@ const ItemManagement = () => {
   const downloadReport = () => {
     const doc = new jsPDF();
     doc.text("Item Report", 10, 10);
-    items.forEach((item, index) => {
+    filteredItems.forEach((item, index) => {
       doc.text(
         `${index + 1}. ${item.itemName} - ${item.unitType} - Unit Price: ${
           item.unitPrice
@@ -101,21 +112,42 @@ const ItemManagement = () => {
   };
 
   const columns = [
-    { title: "Item Code", dataIndex: "itemCode", key: "itemCode" },
-    { title: "Item Name", dataIndex: "itemName", key: "itemName" },
-    { title: "Unit Type", dataIndex: "unitType", key: "unitType" },
-
+    {
+      title: "Item Code",
+      dataIndex: "itemCode",
+      key: "itemCode",
+      sorter: (a, b) => a.itemCode.localeCompare(b.itemCode),
+    },
+    {
+      title: "Item Name",
+      dataIndex: "itemName",
+      key: "itemName",
+      sorter: (a, b) => a.itemName.localeCompare(b.itemName),
+    },
+    {
+      title: "Unit Type",
+      dataIndex: "unitType",
+      key: "unitType",
+      sorter: (a, b) => a.unitType.localeCompare(b.unitType),
+    },
     {
       title: "Discount 1 (%)",
       dataIndex: "discountPercentage1",
       key: "discountPercentage1",
+      sorter: (a, b) => a.discountPercentage1 - b.discountPercentage1,
     },
     {
       title: "Discount 2 (%)",
       dataIndex: "discountPercentage2",
       key: "discountPercentage2",
+      sorter: (a, b) => a.discountPercentage2 - b.discountPercentage2,
     },
-    { title: "Retail Price", dataIndex: "unitPrice", key: "unitPrice" },
+    {
+      title: "Retail Price",
+      dataIndex: "unitPrice",
+      key: "unitPrice",
+      sorter: (a, b) => a.unitPrice - b.unitPrice,
+    },
     {
       title: "Customer Discount",
       dataIndex: "secondPrice",
@@ -128,13 +160,23 @@ const ItemManagement = () => {
           </span>
         );
       },
+      sorter: (a, b) =>
+        a.unitPrice -
+        (a.unitPrice * a.discountPercentage1) / 100 -
+        (b.unitPrice - (b.unitPrice * b.discountPercentage1) / 100),
     },
     {
       title: "Distributed Discount",
       dataIndex: "wholesalePrice",
       key: "wholesalePrice",
+      sorter: (a, b) => a.wholesalePrice - b.wholesalePrice,
     },
-    { title: "Supplier", dataIndex: "supplier", key: "supplier" },
+    {
+      title: "Supplier",
+      dataIndex: "supplier",
+      key: "supplier",
+      sorter: (a, b) => a.supplier.localeCompare(b.supplier),
+    },
     {
       title: "Action",
       key: "action",
@@ -157,27 +199,33 @@ const ItemManagement = () => {
   return (
     <div>
       <h2>Item Management</h2>
-      <Input
-        placeholder="Search by item name"
-        value={searchTerm}
-        onChange={handleSearch}
-        style={{ width: 300, marginBottom: 20 }}
-      />
-      <Button
-        type="primary"
-        onClick={openAddModal}
-        style={{ marginBottom: 20, marginLeft: 20 }}
-      >
-        Add Item
-      </Button>
-      <Button
-        type="primary"
-        onClick={downloadReport}
-        style={{ marginBottom: 20, marginLeft: 20 }}
-      >
-        Download Report
-      </Button>
-      <Table columns={columns} dataSource={items} rowKey="id" />
+      <Row gutter={16} style={{ marginBottom: 20 }}>
+        <Col span={8}>
+          <Input
+            placeholder="Search by item name"
+            value={nameSearch}
+            onChange={(e) => setNameSearch(e.target.value)}
+          />
+        </Col>
+        <Col span={8}>
+          <Input
+            placeholder="Search by item code"
+            value={codeSearch}
+            onChange={(e) => setCodeSearch(e.target.value)}
+          />
+        </Col>
+        <Col span={8}>
+          <Space>
+            <Button type="primary" onClick={openAddModal}>
+              Add Item
+            </Button>
+            <Button type="primary" onClick={downloadReport}>
+              Download Report
+            </Button>
+          </Space>
+        </Col>
+      </Row>
+      <Table columns={columns} dataSource={filteredItems} rowKey="id" />
       <Modal
         title={isEditing ? "Update Item" : "Add Item"}
         open={isModalVisible}
@@ -195,7 +243,7 @@ const ItemManagement = () => {
           <Form.Item
             label="Item code"
             name="itemCode"
-            rules={[{ required: true, message: "Please input the item name!" }]}
+            rules={[{ required: true, message: "Please input the item code!" }]}
           >
             <Input placeholder="Item Code" />
           </Form.Item>
