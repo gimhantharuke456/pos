@@ -12,6 +12,19 @@ const orderService = {
     orderCode
   ) => {
     return db.transaction(async () => {
+      // Calculate total amount
+      for (const item of items) {
+        const itemData = await db
+          .prepare("SELECT * FROM items WHERE id = ?")
+          .get(item.id);
+        totalAmount += item.quantity * itemData.unitPrice;
+      }
+
+      // Apply discount for cash payments
+      let discount = 0;
+      if (paymentMethod === "cash") {
+      }
+
       // Insert order
       const orderInfo = await db
         .prepare(

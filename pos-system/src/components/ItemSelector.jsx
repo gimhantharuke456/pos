@@ -138,6 +138,9 @@ const OrderForm = ({ onSubmit, initialValues }) => {
       <Form.Item name="orderCode" label="Invoice Number">
         <Input placeholder={orderCode} />
       </Form.Item>
+      <Form.Item name="orderDate" label="Order Date">
+        <Input type="date" />
+      </Form.Item>
       <Form.Item
         name="customerId"
         label="Customer"

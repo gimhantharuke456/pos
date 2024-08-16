@@ -223,6 +223,15 @@ const Orders = () => {
     },
   ];
 
+  const totalBill = () => {
+    if (viewOrderItems != null) {
+      return viewOrderItems.reduce((total, item) => {
+        return total + item.quantity * item.itemPrice;
+      }, 0);
+    }
+    return 0;
+  };
+
   return (
     <div>
       <Input.Search
@@ -267,7 +276,7 @@ const Orders = () => {
       </Modal>
       <Modal
         width={1200}
-        title="Order Items"
+        title="Invoice Items"
         open={viewOrderItems !== null}
         onCancel={() => setViewOrderItems(null)}
         footer={null}
@@ -303,6 +312,9 @@ const Orders = () => {
           rowKey="id"
           pagination={false}
         />
+        <Row justify="end" style={{ marginTop: 20 }}>
+          <h1> {`Total Bill LKR : ${totalBill().toString()}`}</h1>
+        </Row>
       </Modal>
     </div>
   );

@@ -7,10 +7,14 @@ import {
   message,
   Button,
   Popconfirm,
+  Typography,
+  Row,
+  Divider,
 } from "antd";
 import grnService from "../services/grnService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+const { Text } = Typography;
 
 const GrnReport = ({ grnId, refresh }) => {
   const [loading, setLoading] = useState(true);
@@ -70,7 +74,7 @@ const GrnReport = ({ grnId, refresh }) => {
       key: "itemName",
     },
     {
-      title: "Unit Price",
+      title: "Retail Price",
       dataIndex: "unitPrice",
       key: "unitPrice",
     },
@@ -108,6 +112,14 @@ const GrnReport = ({ grnId, refresh }) => {
     },
   ];
 
+  const totalBill = () => {
+    let total = 0;
+    grnData.items.forEach((item) => {
+      total += item.receivedQuantity * item.secondPrice;
+    });
+    return total;
+  };
+
   return (
     <Card id="grn-report">
       <Descriptions bordered column={1}>
@@ -122,7 +134,6 @@ const GrnReport = ({ grnId, refresh }) => {
           {grnData.supplierCode}
         </Descriptions.Item>
       </Descriptions>
-
       <Table
         columns={columns}
         dataSource={grnData.items}
@@ -130,6 +141,11 @@ const GrnReport = ({ grnId, refresh }) => {
         pagination={false}
         style={{ marginTop: "20px" }}
       />
+      <Divider />
+      <Row justify={"end"}>
+        <Text strong>{`Total LKR ${totalBill()}`}</Text>
+      </Row>{" "}
+      <Divider />
       <div style={{ marginTop: "20px" }}>
         {grnData.status !== "ACCEPTED" && (
           <Popconfirm
