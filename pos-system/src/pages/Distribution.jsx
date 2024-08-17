@@ -15,6 +15,7 @@ import moment from "moment";
 import { PlusCircleFilled } from "@ant-design/icons";
 import distributionService from "../services/distributionService";
 import supplierService from "../services/supplierService";
+
 const { Text } = Typography;
 const { Option } = Select;
 
@@ -22,9 +23,9 @@ const Distribution = () => {
   const [loading, setLoading] = useState(true);
   const [distributions, setDistributions] = useState([]);
   const [filteredDistributions, setFilteredDistributions] = useState([]);
-  const [supplierCodes, setSupplierCodes] = useState([]);
+  const [supplierOptions, setSupplierOptions] = useState([]);
   const [searchCode, setSearchCode] = useState("");
-  const [selectedSupplierCode, setSelectedSupplierCode] = useState(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState(null);
   const [stockAmounts, setStockAmounts] = useState({});
 
   const calculateTotal = () => {
@@ -32,9 +33,11 @@ const Distribution = () => {
       return acc + item.inStockAmount * item.wholesalePrice;
     }, 0);
   };
+
   const handleStockChange = (id, value) => {
     setStockAmounts((prev) => ({ ...prev, [id]: value }));
   };
+
   const updateStockAmount = async (id, newAmount) => {
     try {
       await distributionService.updateStock(id, parseInt(newAmount));
@@ -44,6 +47,7 @@ const Distribution = () => {
       message.error("Failed to update stock amount");
     }
   };
+
   useEffect(() => {
     const fetchDistributions = async () => {
       try {
@@ -52,12 +56,19 @@ const Distribution = () => {
           ...item,
           formattedDate: moment(item.updatedAt).format("YYYY-MM-DD HH:mm:ss"),
         }));
-
+        setDistributions(formattedData);
         setFilteredDistributions(formattedData);
 
-        let data = await supplierService.getAllSuppliers();
+        let suppliersData = await supplierService.getAllSuppliers();
+        setSupplierOptions([
+          { id: "all", name: "All Suppliers" },
+          ...suppliersData.map((supplier) => ({
+            id: supplier.id,
+            name: supplier.supplierName,
+            supplierCode: supplier.supplierCode,
+          })),
+        ]);
 
-        setSupplierCodes(data.map((supplier) => supplier.supplierCode));
         for (var distribution of response.data) {
           handleStockChange(distribution.id, distribution.inStockAmount);
         }
@@ -73,7 +84,7 @@ const Distribution = () => {
 
   useEffect(() => {
     filterDistributions();
-  }, [searchCode, selectedSupplierCode, distributions]);
+  }, [searchCode, selectedSupplierId, distributions]);
 
   const filterDistributions = () => {
     let filtered = [...distributions];
@@ -82,9 +93,9 @@ const Distribution = () => {
         item.itemCode.toLowerCase().includes(searchCode.toLowerCase())
       );
     }
-    if (selectedSupplierCode) {
+    if (selectedSupplierId && selectedSupplierId !== "all") {
       filtered = filtered.filter(
-        (item) => item.supplierCode === selectedSupplierCode
+        (item) => item.supplierId === selectedSupplierId
       );
     }
     setFilteredDistributions(filtered);
@@ -180,12 +191,10 @@ const Distribution = () => {
     },
     {
       title: "Amount",
-
       key: "amount",
       render: (_, record) =>
         (record.inStockAmount * record.wholesalePrice).toFixed(2),
     },
-
     {
       title: "Added Date",
       dataIndex: "formattedDate",
@@ -210,13 +219,14 @@ const Distribution = () => {
         />
         <Select
           style={{ width: 200 }}
-          placeholder="Filter by Supplier Code"
+          placeholder="Filter by Supplier"
           allowClear
-          onChange={(value) => setSelectedSupplierCode(value)}
+          onChange={(value) => setSelectedSupplierId(value)}
+          value={selectedSupplierId}
         >
-          {supplierCodes.map((code) => (
-            <Option key={code} value={code}>
-              {code}
+          {supplierOptions.map((supplier) => (
+            <Option key={supplier.id} value={supplier.id}>
+              {supplier.supplierCode}
             </Option>
           ))}
         </Select>
