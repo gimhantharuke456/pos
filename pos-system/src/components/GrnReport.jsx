@@ -157,7 +157,7 @@ const GrnReport = ({ grnId, refresh }) => {
       <Row justify={"end"}>
         <Text strong>
           {" "}
-          {`Table Value : ${
+          {`Payable Value : ${
             totalBill() -
             (totalBill() * grnData.items[0]?.discountPercentage2) / 100
           }`}{" "}
