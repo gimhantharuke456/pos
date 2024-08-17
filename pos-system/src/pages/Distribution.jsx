@@ -26,9 +26,9 @@ const Distribution = () => {
   const [searchCode, setSearchCode] = useState("");
   const [selectedSupplierCode, setSelectedSupplierCode] = useState(null);
   const [stockAmounts, setStockAmounts] = useState({});
-  const [total, setTotal] = useState(0);
-  const calculateTotal = (distributions) => {
-    return distributions.reduce((acc, item) => {
+
+  const calculateTotal = () => {
+    return filteredDistributions.reduce((acc, item) => {
       return acc + item.inStockAmount * item.wholesalePrice;
     }, 0);
   };
@@ -52,9 +52,9 @@ const Distribution = () => {
           ...item,
           formattedDate: moment(item.updatedAt).format("YYYY-MM-DD HH:mm:ss"),
         }));
-        setTotal(calculateTotal(formattedData));
-        setDistributions(formattedData);
+
         setFilteredDistributions(formattedData);
+
         let data = await supplierService.getAllSuppliers();
 
         setSupplierCodes(data.map((supplier) => supplier.supplierCode));
@@ -236,7 +236,7 @@ const Distribution = () => {
                 Total
               </Table.Summary.Cell>
               <Table.Summary.Cell index={1} colSpan={3}>
-                <Text strong>{`LKR ${total.toFixed(2)}`}</Text>
+                <Text strong>{`LKR ${calculateTotal().toFixed(2)}`}</Text>
               </Table.Summary.Cell>
             </Table.Summary.Row>
           </Table.Summary>
