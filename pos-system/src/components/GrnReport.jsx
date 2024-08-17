@@ -158,6 +158,7 @@ const GrnReport = ({ grnId, refresh }) => {
         <Text strong>
           {" "}
           {`PO Value : ${
+            totalBill() -
             (totalBill() * grnData.items[0]?.discountPercentage2) / 100
           }`}{" "}
         </Text>
