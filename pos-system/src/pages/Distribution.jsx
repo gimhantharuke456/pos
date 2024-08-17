@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Table, Spin, message, Button, Input, Select } from "antd";
+import { Table, Spin, message, Button, Input, Select, Space } from "antd";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import moment from "moment";
+import { PlusCircleFilled } from "@ant-design/icons";
 import distributionService from "../services/distributionService";
 
 const { Option } = Select;
@@ -14,7 +15,19 @@ const Distribution = () => {
   const [supplierCodes, setSupplierCodes] = useState([]);
   const [searchCode, setSearchCode] = useState("");
   const [selectedSupplierCode, setSelectedSupplierCode] = useState(null);
-
+  const [stockAmounts, setStockAmounts] = useState({});
+  const handleStockChange = (id, value) => {
+    setStockAmounts((prev) => ({ ...prev, [id]: value }));
+  };
+  const updateStockAmount = async (id, newAmount) => {
+    try {
+      await distributionService.updateStock(id, parseInt(newAmount));
+      message.success("Stock amount updated successfully");
+    } catch (error) {
+      console.error("Failed to update stock amount", error);
+      message.error("Failed to update stock amount");
+    }
+  };
   useEffect(() => {
     const fetchDistributions = async () => {
       try {
@@ -29,6 +42,9 @@ const Distribution = () => {
           ...new Set(formattedData.map((item) => item.supplierCode)),
         ];
         setSupplierCodes(codes);
+        for (var distribution of response.data) {
+          handleStockChange(distribution.id, distribution.inStockAmount);
+        }
       } catch (error) {
         console.error("Failed to fetch distributions", error);
         message.error("Failed to fetch distributions");
@@ -118,6 +134,27 @@ const Distribution = () => {
       dataIndex: "inStockAmount",
       key: "inStockAmount",
       sorter: (a, b) => a.inStockAmount - b.inStockAmount,
+      render: (_, record) => (
+        <Space>
+          <Input
+            placeholder={stockAmounts[record.id]}
+            value={stockAmounts[record.id]}
+            onChange={(e) => handleStockChange(record.id, e.target.value)}
+            suffix={
+              <Button
+                icon={<PlusCircleFilled />}
+                onClick={async () => {
+                  console.log(record.distributionId);
+                  await updateStockAmount(
+                    record.distributionId,
+                    stockAmounts[record.id]
+                  );
+                }}
+              ></Button>
+            }
+          />
+        </Space>
+      ),
     },
     {
       title: "Distributed Price",

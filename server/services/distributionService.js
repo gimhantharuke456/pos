@@ -53,7 +53,7 @@ const distributionService = {
   getAllDistributions: () => {
     return db
       .prepare(
-        `SELECT d.*, i.*, s.name as supplierName, s.supplierCode
+        `SELECT d.*, i.*, s.name as supplierName, s.supplierCode, d.id as distributionId
          FROM distributions d
          JOIN items i ON d.itemId = i.id
          JOIN suppliers s ON i.supplierId = s.id`
@@ -61,10 +61,14 @@ const distributionService = {
       .all();
   },
 
-  updateDistribution: (id, inStockAmount) => {
-    return db
-      .prepare("UPDATE distributions SET inStockAmount = ? WHERE id = ?")
-      .run(inStockAmount, id);
+  updateDistribution: async (id, inStockAmount) => {
+    try {
+      return await db
+        .prepare("UPDATE distributions SET inStockAmount = ? WHERE id = ?")
+        .run(inStockAmount, id);
+    } catch (error) {
+      console.error("Error updating distribution:", error);
+    }
   },
 
   deleteDistribution: (id) => {

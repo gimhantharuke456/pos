@@ -46,12 +46,13 @@ router.get("/", (req, res) => {
 });
 
 // Update a distribution
-router.patch("/:id", (req, res) => {
+router.patch("/:id", async (req, res) => {
   try {
-    const { inStockAmount } = req.body;
-    const result = distributionService.updateDistribution(
+    const { quantity } = req.body;
+    console.log("Received quantity:", quantity);
+    const result = await distributionService.updateDistribution(
       req.params.id,
-      inStockAmount
+      quantity
     );
     if (result.changes) {
       res.json({ message: "Distribution updated successfully" });
