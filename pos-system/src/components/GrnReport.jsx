@@ -144,7 +144,7 @@ const GrnReport = ({ grnId, refresh }) => {
       />
       <Divider />
       <Row justify={"end"}>
-        <Text strong>{`Total LKR ${totalBill()}`}</Text>
+        <Text strong>{`Table Amount LKR ${totalBill()}`}</Text>
       </Row>{" "}
       <Divider />
       <Row justify={"end"}>
