@@ -135,7 +135,7 @@ const OrderForm = ({ onSubmit, initialValues }) => {
       initialValues={initialValues}
       layout="vertical"
     >
-      <Form.Item name="orderCode" label="Invoice Number">
+      <Form.Item name="orderCode" label="Customer Invoice Number">
         <Input placeholder={orderCode} />
       </Form.Item>
       <Form.Item name="orderDate" label="Order Date">
