@@ -125,7 +125,7 @@ const GrnManagement = () => {
 
   const columns = [
     {
-      title: "GRN Code",
+      title: "Invoice Number",
       dataIndex: "goodReceivedNoteCode",
       key: "goodReceivedNoteCode",
       sorter: (a, b) =>
@@ -231,8 +231,8 @@ const GrnManagement = () => {
         footer={null}
       >
         <Form form={form} onFinish={handleCreateGRN} layout="vertical">
-          <Form.Item name="goodReceivedNoteCode" label="GRN Code">
-            <Input disabled value={grnCode} placeholder={grnCode} />
+          <Form.Item name="goodReceivedNoteCode" label="Invoice Number">
+            <Input />
           </Form.Item>
           <Form.Item
             name="purchaseOrderId"
