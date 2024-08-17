@@ -43,7 +43,8 @@ const PurchaseOrderReport = ({ purchaseOrderId }) => {
     {
       title: "Amount",
       key: "total",
-      render: (_, record) => (record?.secondPrice).toFixed(2),
+      render: (_, record) =>
+        (record?.secondPrice * record?.quantity).toFixed(2),
     },
   ];
 
