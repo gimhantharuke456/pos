@@ -157,6 +157,13 @@ const Distribution = () => {
       ),
     },
     {
+      title: "Amount",
+
+      key: "amount",
+      render: (_, record) =>
+        (record.inStockAmount * record.wholesalePrice).toFixed(2),
+    },
+    {
       title: "Distributed Price",
       dataIndex: "wholesalePrice",
       key: "wholesalePrice",
