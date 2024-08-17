@@ -88,17 +88,17 @@ const GrnReport = ({ grnId, refresh }) => {
       dataIndex: "receivedQuantity",
       key: "receivedQuantity",
     },
-    // {
-    //   title: "Total Ordered Amount",
-    //   dataIndex: "total",
-    //   key: "total",
-    //   render: (_, record) => {
-    //     const total =
-    //       record.orderedQuantity *
-    //       (record.secondPrice || record.wholesalePrice);
-    //     return total;
-    //   },
-    // },
+    {
+      title: "Total Ordered Amount",
+      dataIndex: "total",
+      key: "total",
+      render: (_, record) => {
+        const total =
+          record.orderedQuantity *
+          (record.secondPrice || record.wholesalePrice);
+        return total;
+      },
+    },
     {
       title: "Total Recieved Amount",
       dataIndex: "recievedAmount",
