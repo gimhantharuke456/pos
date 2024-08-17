@@ -78,6 +78,7 @@ const GrnReport = ({ grnId, refresh }) => {
       dataIndex: "unitPrice",
       key: "unitPrice",
     },
+
     {
       title: "Customer Margin",
       dataIndex: "secondPrice",
@@ -144,6 +145,22 @@ const GrnReport = ({ grnId, refresh }) => {
       <Divider />
       <Row justify={"end"}>
         <Text strong>{`Total LKR ${totalBill()}`}</Text>
+      </Row>{" "}
+      <Divider />
+      <Row justify={"end"}>
+        <Text strong>
+          Distributed Margin : LKR{" "}
+          {(totalBill() * grnData.items[0]?.discountPercentage2) / 100}
+        </Text>
+      </Row>{" "}
+      <Divider />
+      <Row justify={"end"}>
+        <Text strong>
+          {" "}
+          {`PO Value : ${
+            (totalBill() * grnData.items[0]?.discountPercentage2) / 100
+          }`}{" "}
+        </Text>
       </Row>{" "}
       <Divider />
       <div style={{ marginTop: "20px" }}>
