@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Table, Spin, message, Button, Input, Select, Space } from "antd";
+import {
+  Table,
+  Spin,
+  message,
+  Button,
+  Input,
+  Select,
+  Space,
+  Typography,
+} from "antd";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import moment from "moment";
 import { PlusCircleFilled } from "@ant-design/icons";
 import distributionService from "../services/distributionService";
-
+import supplierService from "../services/supplierService";
+const { Text } = Typography;
 const { Option } = Select;
 
 const Distribution = () => {
@@ -16,6 +26,12 @@ const Distribution = () => {
   const [searchCode, setSearchCode] = useState("");
   const [selectedSupplierCode, setSelectedSupplierCode] = useState(null);
   const [stockAmounts, setStockAmounts] = useState({});
+  const [total, setTotal] = useState(0);
+  const calculateTotal = (distributions) => {
+    return distributions.reduce((acc, item) => {
+      return acc + item.inStockAmount * item.wholesalePrice;
+    }, 0);
+  };
   const handleStockChange = (id, value) => {
     setStockAmounts((prev) => ({ ...prev, [id]: value }));
   };
@@ -36,12 +52,12 @@ const Distribution = () => {
           ...item,
           formattedDate: moment(item.updatedAt).format("YYYY-MM-DD HH:mm:ss"),
         }));
+        setTotal(calculateTotal(formattedData));
         setDistributions(formattedData);
         setFilteredDistributions(formattedData);
-        const codes = [
-          ...new Set(formattedData.map((item) => item.supplierCode)),
-        ];
-        setSupplierCodes(codes);
+        let data = await supplierService.getAllSuppliers();
+
+        setSupplierCodes(data.map((supplier) => supplier.supplierCode));
         for (var distribution of response.data) {
           handleStockChange(distribution.id, distribution.inStockAmount);
         }
@@ -213,6 +229,18 @@ const Distribution = () => {
         dataSource={filteredDistributions}
         rowKey="id"
         pagination={false}
+        summary={() => (
+          <Table.Summary fixed>
+            <Table.Summary.Row>
+              <Table.Summary.Cell index={0} colSpan={5}>
+                Total
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={1} colSpan={3}>
+                <Text strong>{`LKR ${total.toFixed(2)}`}</Text>
+              </Table.Summary.Cell>
+            </Table.Summary.Row>
+          </Table.Summary>
+        )}
       />
     </div>
   );
