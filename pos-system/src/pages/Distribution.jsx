@@ -157,18 +157,19 @@ const Distribution = () => {
       ),
     },
     {
+      title: "Distributed Price",
+      dataIndex: "wholesalePrice",
+      key: "wholesalePrice",
+      sorter: (a, b) => a.wholesalePrice - b.wholesalePrice,
+    },
+    {
       title: "Amount",
 
       key: "amount",
       render: (_, record) =>
         (record.inStockAmount * record.wholesalePrice).toFixed(2),
     },
-    {
-      title: "Distributed Price",
-      dataIndex: "wholesalePrice",
-      key: "wholesalePrice",
-      sorter: (a, b) => a.wholesalePrice - b.wholesalePrice,
-    },
+
     {
       title: "Added Date",
       dataIndex: "formattedDate",
