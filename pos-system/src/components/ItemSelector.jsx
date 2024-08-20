@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { Form, Select, Button, message, Table, Input, InputNumber } from "antd";
 import customerService from "../services/customerService";
-import { getAllItems } from "../services/itemService";
+import supplierService from "../services/supplierService";
+import distributionService from "../services/distributionService";
 
 const { Option } = Select;
+const { Search } = Input;
 
 const OrderForm = ({ onSubmit, initialValues }) => {
   const [customers, setCustomers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [items, setItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
   const [form] = Form.useForm();
   const [orderCode, setOrderCode] = useState("");
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const generatCode = () => {
+  const generateCode = () => {
     const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     return `CO-${currentDate}-${randomNum}`;
@@ -19,9 +25,19 @@ const OrderForm = ({ onSubmit, initialValues }) => {
 
   useEffect(() => {
     fetchCustomers();
-    fetchItems();
-    setOrderCode(generatCode());
+    fetchSuppliers();
+    setOrderCode(generateCode());
   }, []);
+
+  useEffect(() => {
+    if (selectedSupplier) {
+      fetchItems();
+    }
+  }, [selectedSupplier]);
+
+  useEffect(() => {
+    filterItems();
+  }, [items, searchQuery]);
 
   const fetchCustomers = async () => {
     try {
@@ -32,17 +48,44 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     }
   };
 
+  const fetchSuppliers = async () => {
+    try {
+      const data = await supplierService.getAllSuppliers();
+      setSuppliers(data);
+    } catch (error) {
+      message.error("Failed to fetch suppliers");
+    }
+  };
+
   const fetchItems = async () => {
     try {
-      const data = await getAllItems();
-      setItems(data.map((item) => ({ ...item, quantity: 0, discount: 0 })));
+      const data = await distributionService.getAllDistributions();
+      const filteredItems = data.data.filter(
+        (item) => item.supplierId === selectedSupplier
+      );
+      setItems(
+        filteredItems.map((item) => ({
+          ...item,
+          quantity: 0,
+          discount: 0,
+        }))
+      );
     } catch (error) {
       message.error("Failed to fetch items");
     }
   };
 
+  const filterItems = () => {
+    const filtered = items.filter(
+      (item) =>
+        item.itemCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.itemName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredItems(filtered);
+  };
+
   const handleSubmit = (values) => {
-    const orderedItems = items.filter((item) => item.quantity > 0);
+    const orderedItems = filteredItems.filter((item) => item.quantity > 0);
     const totalAmount = orderedItems.reduce(
       (total, item) =>
         total +
@@ -53,13 +96,14 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     onSubmit({
       ...values,
       items: orderedItems,
-      orderCode: orderCode,
       totalAmount,
     });
 
     // Clean all inputs after creating order
     form.resetFields();
     setItems(items.map((item) => ({ ...item, quantity: 0, discount: 0 })));
+    setSelectedSupplier(null);
+    setSearchQuery("");
   };
 
   const handleQuantityChange = (itemId, value) => {
@@ -78,16 +122,24 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     );
   };
 
+  const handleSupplierChange = (value) => {
+    setSelectedSupplier(value);
+  };
+
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+  };
+
   const columns = [
+    {
+      title: "Item Code",
+      dataIndex: "itemCode",
+      key: "itemCode",
+    },
     {
       title: "Item Name",
       dataIndex: "itemName",
       key: "itemName",
-    },
-    {
-      title: "Supplier",
-      dataIndex: "supplier",
-      key: "supplier",
     },
     {
       title: "Unit Price",
@@ -101,7 +153,9 @@ const OrderForm = ({ onSubmit, initialValues }) => {
       render: (_, record) => (
         <InputNumber
           min={0}
+          max={record.inStockAmount}
           value={record.quantity}
+          placeholder={`${record.inStockAmount}`}
           onChange={(value) => handleQuantityChange(record.id, value)}
         />
       ),
@@ -155,10 +209,22 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         </Select>
       </Form.Item>
       <Form.Item
+        name="supplierId"
+        label="Supplier"
+        rules={[{ required: true }]}
+      >
+        <Select placeholder="Select a supplier" onChange={handleSupplierChange}>
+          {suppliers.map((supplier) => (
+            <Option key={supplier.id} value={supplier.id}>
+              {supplier.name}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+      <Form.Item
         name="paymentMethod"
         label="Payment Method"
         rules={[{ required: true }]}
-        ß
       >
         <Select placeholder="Select a payment method">
           <Option value="cash">Cash</Option>
@@ -167,13 +233,25 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         </Select>
       </Form.Item>
 
-      <Table
-        columns={columns}
-        dataSource={items}
-        rowKey={(record) => record.id}
-        pagination={false}
-        style={{ marginBottom: 20 }}
-      />
+      {selectedSupplier && (
+        <>
+          <Form.Item label="Search Items">
+            <Search
+              placeholder="Search by item code or name"
+              onSearch={handleSearch}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ marginBottom: 16 }}
+            />
+          </Form.Item>
+          <Table
+            columns={columns}
+            dataSource={filteredItems}
+            rowKey={(record) => record.id}
+            pagination={false}
+            style={{ marginBottom: 20 }}
+          />
+        </>
+      )}
 
       <Form.Item>
         <Button type="primary" htmlType="submit">

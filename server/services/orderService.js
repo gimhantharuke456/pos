@@ -53,13 +53,15 @@ const orderService = {
       const distribution = db.prepare(
         "SELECT * FROM distributions WHERE itemId = ?"
       );
+
       for (const item of items) {
-        const dItem = distribution.run(item.id);
+        const dItem = await distribution.all(item.id);
 
-        const newQuantity = dItem.inStockAmount ?? 10 - item.quantity;
+        if (dItem.length > 0) {
+          const newQuantity = (dItem[0].inStockAmount ?? 0) - item.quantity;
 
-        await updateDistribution.run(newQuantity, item.id);
-
+          await updateDistribution.run(newQuantity, item.itemId);
+        }
         await insertOrderItem.run(
           orderId,
           item.id,
