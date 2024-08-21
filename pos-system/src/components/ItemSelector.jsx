@@ -86,13 +86,13 @@ const OrderForm = ({ onSubmit, initialValues }) => {
 
   const handleSubmit = (values) => {
     const orderedItems = filteredItems.filter((item) => item.quantity > 0);
-    const totalAmount = orderedItems.reduce(
-      (total, item) =>
-        total +
-        (item.secondPrice - (item.wholesalePrice / 100) * item.discount) *
-          item.quantity,
-      0
-    );
+    let totalAmount = 0;
+    orderedItems.forEach((item) => {
+      totalAmount += item.quantity * item.unitPrice;
+    });
+
+    totalAmount = totalAmount - (totalAmount * values.discount) / 100;
+    console.log(totalAmount, values.discount);
     onSubmit({
       ...values,
       items: orderedItems,
@@ -114,12 +114,14 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     );
   };
 
-  const handleDiscountChange = (itemId, value) => {
+  const handleDiscountChange = (value) => {
+    let i = [];
     setItems(
-      items.map((item) =>
-        item.id === itemId ? { ...item, discount: value } : item
-      )
+      items.forEach((item) => {
+        i.push({ ...item, discount: value });
+      })
     );
+    setItems(i);
   };
 
   const handleSupplierChange = (value) => {
@@ -160,19 +162,19 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         />
       ),
     },
-    {
-      title: "Discount (%)",
-      dataIndex: "discount",
-      key: "discount",
-      render: (_, record) => (
-        <InputNumber
-          min={0}
-          max={100}
-          value={record.discount}
-          onChange={(value) => handleDiscountChange(record.id, value)}
-        />
-      ),
-    },
+    // {
+    //   title: "Discount (%)",
+    //   dataIndex: "discount",
+    //   key: "discount",
+    //   render: (_, record) => (
+    //     <InputNumber
+    //       min={0}
+    //       max={100}
+    //       value={record.discount}
+    //       onChange={(value) => handleDiscountChange(record.id, value)}
+    //     />
+    //   ),
+    // },
     {
       title: "Total Price",
       key: "totalPrice",
@@ -252,7 +254,17 @@ const OrderForm = ({ onSubmit, initialValues }) => {
           />
         </>
       )}
-
+      <Form.Item
+        initialValue={0}
+        name="discount"
+        label="Discount"
+        rules={[{ required: true }]}
+      >
+        <InputNumber
+          onChange={(value) => handleDiscountChange(parseInt(value))}
+          type="number"
+        />
+      </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit">
           {initialValues ? "Update Order" : "Create Order"}

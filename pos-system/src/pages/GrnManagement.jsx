@@ -9,7 +9,12 @@ import {
   message,
   Space,
 } from "antd";
-import { PlusOutlined, FileTextOutlined, EyeFilled } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  FileTextOutlined,
+  EyeFilled,
+  DeleteFilled,
+} from "@ant-design/icons";
 import grnService from "../services/grnService";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -168,6 +173,15 @@ const GrnManagement = () => {
               setShowGrnReportModal(true);
             }}
             icon={<EyeFilled />}
+          ></Button>
+          <Button
+            style={{ marginRight: 8 }}
+            onClick={async () => {
+              await grnService.updateGRNStatus(id, "DELETED");
+              fetchGRNs();
+            }}
+            danger
+            icon={<DeleteFilled />}
           ></Button>
         </>
       ),

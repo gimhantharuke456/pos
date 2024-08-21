@@ -9,22 +9,10 @@ const orderService = {
     items,
     totalAmount,
     orderDate,
-    orderCode
+    orderCode,
+    discount
   ) => {
     return db.transaction(async () => {
-      // Calculate total amount
-      for (const item of items) {
-        const itemData = await db
-          .prepare("SELECT * FROM items WHERE id = ?")
-          .get(item.id);
-        totalAmount += item.quantity * itemData.unitPrice;
-      }
-
-      // Apply discount for cash payments
-      let discount = 0;
-      if (paymentMethod === "cash") {
-      }
-
       // Insert order
       const orderInfo = await db
         .prepare(
@@ -62,13 +50,14 @@ const orderService = {
 
           await updateDistribution.run(newQuantity, item.itemId);
         }
+        const itemPrice = item.unitPrice - (item.unitPrice * discount) / 100;
         await insertOrderItem.run(
           orderId,
           item.id,
           item.quantity,
           item.discount1,
           item.discount2,
-          item.secondPrice
+          itemPrice
         );
       }
 
