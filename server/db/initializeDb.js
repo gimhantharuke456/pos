@@ -123,21 +123,34 @@ const initializeDb = () => {
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS orders (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      customerId INTEGER NOT NULL,
-
-      paymentMethod TEXT CHECK(paymentMethod IN ('cash', 'cheque', 'credit')) NOT NULL,
-      totalAmount REAL NOT NULL,
-      orderDate DATETIME DEFAULT CURRENT_TIMESTAMP,
-      discount REAL DEFAULT 0,
-      deleteStatus BOOLEAN DEFAULT FALSE,
-      paymentStatus TEXT CHECK(paymentStatus IN ('pending', 'accepted', 'partially paid')) NOT NULL DEFAULT 'pending',
-      paidAmount REAL DEFAULT 0,
-      outstandingAmount REAL GENERATED ALWAYS AS (totalAmount - paidAmount - discount) VIRTUAL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (customerId) REFERENCES customers(id)
-    );
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  customerId INTEGER NOT NULL,
+  orderCode TEXT,  -- new column added
+  paymentMethod TEXT CHECK(paymentMethod IN ('cash', 'cheque', 'credit')) NOT NULL,
+  totalAmount REAL NOT NULL,
+  orderDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+  discount REAL DEFAULT 0,
+  deleteStatus BOOLEAN DEFAULT FALSE,
+  paymentStatus TEXT CHECK(paymentStatus IN ('pending', 'accepted', 'partially paid')) NOT NULL DEFAULT 'pending',
+  paidAmount REAL DEFAULT 0,
+  outstandingAmount REAL GENERATED ALWAYS AS (totalAmount - paidAmount) VIRTUAL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (customerId) REFERENCES customers(id)
+);
+CREATE TABLE IF NOT EXISTS orderItems (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  orderId INTEGER NOT NULL,
+  itemId INTEGER NOT NULL,
+  quantity INTEGER NOT NULL,
+  itemPrice REAL NOT NULL,
+  discount1 REAL DEFAULT 0,
+  discount2 REAL DEFAULT 0,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (orderId) REFERENCES orders(id),
+  FOREIGN KEY (itemId) REFERENCES items(id)
+);
 
   `);
 
@@ -158,21 +171,7 @@ const initializeDb = () => {
     `);
   }
 
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS orderItems (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      orderId INTEGER NOT NULL,
-      itemId INTEGER NOT NULL,
-      quantity INTEGER NOT NULL,
-      itemPrice REAL NOT NULL,
-      discount1 REAL DEFAULT 0,
-      discount2 REAL DEFAULT 0,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (orderId) REFERENCES orders(id),
-      FOREIGN KEY (itemId) REFERENCES items(id)
-    )
-  `);
+  
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS customerReturns (
@@ -225,7 +224,8 @@ const initializeDb = () => {
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (supplierReturnId) REFERENCES supplierReturns(id),
       FOREIGN KEY (itemId) REFERENCES items(id)
-    )
+    );
+
   `);
 
   console.log("Database initialized");

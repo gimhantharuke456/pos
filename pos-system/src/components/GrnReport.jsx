@@ -16,7 +16,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 const { Text } = Typography;
 
-const GrnReport = ({ grnId, refresh }) => {
+const GrnReport = ({ grnId }) => {
   const [loading, setLoading] = useState(true);
   const [grnData, setGrnData] = useState(null);
 
@@ -39,6 +39,21 @@ const GrnReport = ({ grnId, refresh }) => {
     await grnService.updateGRNStatus(grnId, "ACCEPTED");
     message.success("GRN Accepted");
     refresh();
+  };
+
+  const refresh = async () => {
+    const fetchGrnReport = async () => {
+      try {
+        const response = await grnService.getGRNById(grnId);
+        setGrnData(response.data);
+      } catch (error) {
+        console.error("Failed to fetch GRN report", error);
+        message.error("Failed to fetch GRN report");
+      } finally {
+        setLoading(false);
+      }
+    };
+    await fetchGrnReport();
   };
 
   const generatePdf = () => {
