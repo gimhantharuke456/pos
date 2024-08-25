@@ -53,7 +53,7 @@ const distributionService = {
   getAllDistributions: () => {
     return db
       .prepare(
-        `SELECT d.*, i.*, s.name as supplierName, s.supplierCode, d.id as distributionId
+        `SELECT d.*, i.*, s.name as supplierName, s.supplierCode, d.id as distributionId,i.id as itemId
          FROM distributions d
          JOIN items i ON d.itemId = i.id
          JOIN suppliers s ON i.supplierId = s.id`

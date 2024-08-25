@@ -7,6 +7,7 @@ import {
   Select,
   InputNumber,
   Row,
+  Col,
   Input,
 } from "antd";
 import orderService from "../services/orderService";
@@ -30,7 +31,8 @@ const Orders = () => {
   const [selectedOrderForPaidAmount, setSelectedOrderForPaidAmount] =
     useState(null);
   const [newPaidAmount, setNewPaidAmount] = useState(0);
-  const [searchText, setSearchText] = useState("");
+  const [customerCodeSearch, setCustomerCodeSearch] = useState("");
+  const [orderCodeSearch, setOrderCodeSearch] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -47,10 +49,17 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  const handleSearch = (value) => {
-    setSearchText(value);
-    const filtered = orders.filter((order) =>
-      order.customerCode.toLowerCase().includes(value.toLowerCase())
+  useEffect(() => {
+    handleSearch();
+  }, [customerCodeSearch, orderCodeSearch]);
+
+  const handleSearch = () => {
+    const filtered = orders.filter(
+      (order) =>
+        order.customerCode
+          .toLowerCase()
+          .includes(customerCodeSearch.toLowerCase()) &&
+        order.orderCode.toLowerCase().includes(orderCodeSearch.toLowerCase())
     );
     setFilteredOrders(filtered);
   };
@@ -234,25 +243,36 @@ const Orders = () => {
 
   return (
     <div>
-      <Input.Search
-        placeholder="Search by Customer Code"
-        value={searchText}
-        onChange={(e) => handleSearch(e.target.value)}
-        onSearch={handleSearch}
-        style={{ width: 300, marginBottom: 20 }}
-      />
-      <Button type="primary" onClick={handleCreateOrder}>
-        Create Order
-      </Button>
+      <Row gutter={16} style={{ marginBottom: 20 }}>
+        <Col span={8}>
+          <Input
+            placeholder="Search by Customer Code"
+            value={customerCodeSearch}
+            onChange={(e) => setCustomerCodeSearch(e.target.value)}
+          />
+        </Col>
+        <Col span={8}>
+          <Input
+            placeholder="Search by Invoice Number"
+            value={orderCodeSearch}
+            onChange={(e) => setOrderCodeSearch(e.target.value)}
+          />
+        </Col>
+        <Col span={8}>
+          <Button type="primary" onClick={handleCreateOrder}>
+            Create Order
+          </Button>
+        </Col>
+      </Row>
       <Table
         columns={columns}
         dataSource={filteredOrders}
         rowKey="id"
         loading={loading}
-        style={{ marginTop: 20 }}
+        pagination={true}
       />
       <Modal
-        width={800}
+        width={1200}
         title={currentOrder ? "Edit Order" : "Create Order"}
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
@@ -298,7 +318,6 @@ const Orders = () => {
               dataIndex: "itemPrice",
               key: "itemPrice",
             },
-
             {
               title: "Total Price",
               dataIndex: "itemPrice",

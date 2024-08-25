@@ -12,6 +12,7 @@ router.post("/", async (req, res) => {
       totalAmount,
       orderDate,
       orderCode,
+      discount,
     } = req.body;
     const orderId = await orderService.createOrder(
       customerId,
@@ -19,7 +20,8 @@ router.post("/", async (req, res) => {
       items,
       totalAmount,
       orderDate,
-      orderCode
+      orderCode,
+      discount
     );
     res
       .status(201)

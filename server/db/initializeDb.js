@@ -167,11 +167,13 @@ CREATE TABLE IF NOT EXISTS orderItems (
   if (columnExists.cnt === 0) {
     db.exec(`
       ALTER TABLE orders 
-      ADD COLUMN orderCode TEXT ;
+      ADD COLUMN orderCode TEXT ; 
     `);
   }
 
-  
+  db.exec(`
+   
+  `);
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS customerReturns (
@@ -224,8 +226,7 @@ CREATE TABLE IF NOT EXISTS orderItems (
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (supplierReturnId) REFERENCES supplierReturns(id),
       FOREIGN KEY (itemId) REFERENCES items(id)
-    );
-
+    )
   `);
 
   console.log("Database initialized");
