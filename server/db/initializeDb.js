@@ -122,7 +122,7 @@ const initializeDb = () => {
   `);
 
   db.exec(`
-    CREATE TABLE orders (
+    CREATE TABLE IF NOT EXISTS orders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   customerId INTEGER NOT NULL,
   orderCode TEXT,  -- new column added
@@ -138,7 +138,7 @@ const initializeDb = () => {
   updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (customerId) REFERENCES customers(id)
 );
-CREATE TABLE orderItems (
+CREATE TABLE IF NOT EXISTS orderItems (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   orderId INTEGER NOT NULL,
   itemId INTEGER NOT NULL,
