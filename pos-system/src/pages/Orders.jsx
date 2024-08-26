@@ -25,6 +25,7 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentOrder, setCurrentOrder] = useState(null);
+  const [order, setOrder] = useState(null);
   const [viewOrderItems, setViewOrderItems] = useState(null);
   const [updatePaidAmountModalVisible, setUpdatePaidAmountModalVisible] =
     useState(false);
@@ -106,6 +107,7 @@ const Orders = () => {
   };
 
   const showOrderItemsModal = (order) => {
+    setOrder(order);
     setViewOrderItems(order.items);
   };
 
@@ -241,6 +243,10 @@ const Orders = () => {
     return 0;
   };
 
+  const discountedPrice = () => {
+    return (totalBill() / 100) * order?.discount;
+  };
+
   return (
     <div>
       <Row gutter={16} style={{ marginBottom: 20 }}>
@@ -337,7 +343,13 @@ const Orders = () => {
           pagination={false}
         />
         <Row justify="end" style={{ marginTop: 20 }}>
-          <h1> {`Total Bill LKR : ${totalBill().toString()}`}</h1>
+          <h5>{`Disocunt ${order?.discount}%`}</h5>
+        </Row>
+        <Row justify="end" style={{ marginTop: 20 }}>
+          <h5>{`Disocunted Price LKR: ${discountedPrice()}`}</h5>
+        </Row>{" "}
+        <Row justify="end" style={{ marginTop: 20 }}>
+          <h5> {`Total Bill LKR : ${totalBill().toString()}`}</h5>
         </Row>
       </Modal>
     </div>
