@@ -309,6 +309,11 @@ const Orders = () => {
               key: "itemCode",
             },
             {
+              title: "Item Name",
+              dataIndex: "itemName",
+              key: "itemName",
+            },
+            {
               title: "Quantity",
               dataIndex: "quantity",
               key: "quantity",

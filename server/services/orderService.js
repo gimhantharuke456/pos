@@ -46,8 +46,9 @@ const orderService = {
         const dItem = await distribution.all(item.id);
 
         if (dItem.length > 0) {
+          console.log("old quantity ", dItem[0].inStockAmount);
           const newQuantity = (dItem[0].inStockAmount ?? 0) - item.quantity;
-
+          console.log("newQuantity", newQuantity);
           await updateDistribution.run(newQuantity, item.itemId);
         }
         const itemPrice = item.unitPrice - (item.unitPrice * discount) / 100;
