@@ -3,6 +3,7 @@ import { Form, Select, Button, message, Table, Input, InputNumber } from "antd";
 import customerService from "../services/customerService";
 import supplierService from "../services/supplierService";
 import distributionService from "../services/distributionService";
+import debounce from "lodash/debounce";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -16,6 +17,8 @@ const OrderForm = ({ onSubmit, initialValues }) => {
   const [orderCode, setOrderCode] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
 
   const generateCode = () => {
     const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -39,10 +42,15 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     filterItems();
   }, [items, searchQuery]);
 
+  useEffect(() => {
+    filterCustomers();
+  }, [customers, customerSearchQuery]);
+
   const fetchCustomers = async () => {
     try {
       const data = await customerService.getAllCustomers();
       setCustomers(data.data);
+      setFilteredCustomers(data.data);
     } catch (error) {
       message.error("Failed to fetch customers");
     }
@@ -84,6 +92,13 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     setFilteredItems(filtered);
   };
 
+  const filterCustomers = () => {
+    const filtered = customers.filter((customer) =>
+      customer.name.toLowerCase().includes(customerSearchQuery.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+  };
+
   const handleSubmit = (values) => {
     setSearchQuery("");
     const orderedItems = filteredItems.filter((item) => item.quantity > 0);
@@ -105,6 +120,7 @@ const OrderForm = ({ onSubmit, initialValues }) => {
     setItems(items.map((item) => ({ ...item, quantity: 0, discount: 0 })));
     setSelectedSupplier(null);
     setSearchQuery("");
+    setCustomerSearchQuery("");
   };
 
   const handleQuantityChange = (itemId, value) => {
@@ -132,6 +148,10 @@ const OrderForm = ({ onSubmit, initialValues }) => {
   const handleSearch = (value) => {
     setSearchQuery(value);
   };
+
+  const handleCustomerSearch = debounce((value) => {
+    setCustomerSearchQuery(value);
+  }, 300);
 
   const columns = [
     {
@@ -163,19 +183,6 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         />
       ),
     },
-    // {
-    //   title: "Discount (%)",
-    //   dataIndex: "discount",
-    //   key: "discount",
-    //   render: (_, record) => (
-    //     <InputNumber
-    //       min={0}
-    //       max={100}
-    //       value={record.discount}
-    //       onChange={(value) => handleDiscountChange(record.id, value)}
-    //     />
-    //   ),
-    // },
     {
       title: "Total Price",
       key: "totalPrice",
@@ -203,8 +210,14 @@ const OrderForm = ({ onSubmit, initialValues }) => {
         label="Customer"
         rules={[{ required: true }]}
       >
-        <Select placeholder="Select a customer">
-          {customers.map((customer) => (
+        <Select
+          showSearch
+          placeholder="Search and select a customer"
+          filterOption={false}
+          onSearch={handleCustomerSearch}
+          notFoundContent={null}
+        >
+          {filteredCustomers.map((customer) => (
             <Option key={customer.id} value={customer.id}>
               {customer.name}
             </Option>
