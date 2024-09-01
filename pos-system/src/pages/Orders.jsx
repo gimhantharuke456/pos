@@ -9,6 +9,8 @@ import {
   Row,
   Col,
   Input,
+  Typography,
+  Divider,
 } from "antd";
 import orderService from "../services/orderService";
 import {
@@ -18,6 +20,8 @@ import {
 } from "@ant-design/icons";
 import moment from "moment";
 import OrderForm from "../components/ItemSelector";
+import supplierService from "../services/supplierService";
+const { Title } = Typography;
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -34,6 +38,7 @@ const Orders = () => {
   const [newPaidAmount, setNewPaidAmount] = useState(0);
   const [customerCodeSearch, setCustomerCodeSearch] = useState("");
   const [orderCodeSearch, setOrderCodeSearch] = useState("");
+  const [supplier, setSupplier] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -108,6 +113,10 @@ const Orders = () => {
 
   const showOrderItemsModal = (order) => {
     setOrder(order);
+    setSupplier({
+      supplierName: order?.items[0]?.supplierName,
+      supplierCode: order?.items[0]?.supplierCode,
+    });
     setViewOrderItems(order.items);
   };
 
@@ -237,7 +246,7 @@ const Orders = () => {
   const totalBill = () => {
     if (viewOrderItems != null) {
       return viewOrderItems.reduce((total, item) => {
-        return total + item.quantity * item.itemPrice;
+        return total + item.quantity * item.unitPrice;
       }, 0);
     }
     return 0;
@@ -307,6 +316,14 @@ const Orders = () => {
         onCancel={() => setViewOrderItems(null)}
         footer={null}
       >
+        <Divider />
+        <h4>{`Customer Name : ${order?.customerName}`}</h4> <Divider />
+        <h4>{`Customer Code : ${order?.customerCode}`}</h4> <Divider />
+        <Divider />
+        <h4>{`Supplier Code : ${supplier?.supplierCode}`}</h4>
+        <Divider />
+        <h4>{`Supplier Name : ${supplier?.supplierName}`}</h4> <Divider />
+        <h4>{`Order Date: ${order?.orderDate}`}</h4> <Divider />
         <Table
           columns={[
             {
@@ -319,6 +336,7 @@ const Orders = () => {
               dataIndex: "itemName",
               key: "itemName",
             },
+
             {
               title: "Quantity",
               dataIndex: "quantity",
@@ -326,7 +344,7 @@ const Orders = () => {
             },
             {
               title: "Item Price",
-              dataIndex: "itemPrice",
+              dataIndex: "unitPrice",
               key: "itemPrice",
             },
             {
@@ -334,7 +352,7 @@ const Orders = () => {
               dataIndex: "itemPrice",
               key: "totalPrice",
               render: (text, record) => (
-                <>{record.itemPrice * record.quantity}</>
+                <>{record.unitPrice * record.quantity}</>
               ),
             },
           ]}
@@ -343,13 +361,13 @@ const Orders = () => {
           pagination={false}
         />
         <Row justify="end" style={{ marginTop: 20 }}>
-          <h5>{`Disocunt ${order?.discount}%`}</h5>
+          <h5> {`Retail Value LKR : ${totalBill().toString()}`}</h5>
         </Row>
         <Row justify="end" style={{ marginTop: 20 }}>
-          <h5>{`Disocunted Price LKR: ${discountedPrice()}`}</h5>
+          <h5>{`Discount ${order?.discount}% LKR: ${discountedPrice()}`}</h5>
         </Row>{" "}
         <Row justify="end" style={{ marginTop: 20 }}>
-          <h5> {`Total Bill LKR : ${totalBill().toString()}`}</h5>
+          <h5> {`Total Bill LKR : ${totalBill() - discountedPrice()}`}</h5>
         </Row>
       </Modal>
     </div>

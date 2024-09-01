@@ -85,6 +85,7 @@ const OrderForm = ({ onSubmit, initialValues }) => {
   };
 
   const handleSubmit = (values) => {
+    setSearchQuery("");
     const orderedItems = filteredItems.filter((item) => item.quantity > 0);
     let totalAmount = 0;
     orderedItems.forEach((item) => {

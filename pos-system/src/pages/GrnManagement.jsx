@@ -51,7 +51,7 @@ const GrnManagement = () => {
     setLoading(true);
     try {
       const response = await grnService.getAllGRNs();
-      setGrns(response.data);
+      setGrns(response.data.reverse());
     } catch (error) {
       message.error("Failed to fetch GRNs");
     }

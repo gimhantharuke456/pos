@@ -105,10 +105,11 @@ const orderService = {
     for (const order of orders) {
       order.items = await db
         .prepare(
-          `SELECT oi.*, i.* 
-           FROM orderItems oi 
-           JOIN items i ON oi.itemId = i.id 
-           WHERE oi.orderId = ?`
+          `SELECT oi.*, i.*, s.supplierCode, s.name AS supplierName
+             FROM orderItems oi 
+             JOIN items i ON oi.itemId = i.id 
+             JOIN suppliers s ON i.supplierId = s.id
+             WHERE oi.orderId = ?`
         )
         .all(order.id);
     }

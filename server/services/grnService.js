@@ -87,7 +87,7 @@ const grnService = {
   getGRNById: (id) => {
     const grn = db
       .prepare(
-        `SELECT grn.*, po.purchaseOrderCode ,po.supplierId, s.supplierCode 
+        `SELECT grn.*, po.purchaseOrderCode ,po.supplierId, s.supplierCode , s.name
        FROM goodsReceivedNotes grn
        JOIN purchaseOrders po ON grn.purchaseOrderId = po.id
        JOIN suppliers s ON po.supplierId = s.id
