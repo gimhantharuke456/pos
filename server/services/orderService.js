@@ -1,4 +1,5 @@
 const initializeDb = require("../db/initializeDb");
+const stockUpdateService = require("./stockUpdateService");
 const db = initializeDb();
 
 const orderService = {
@@ -50,6 +51,11 @@ const orderService = {
           const newQuantity = (dItem[0].inStockAmount ?? 0) - item.quantity;
           console.log("newQuantity", newQuantity);
           await updateDistribution.run(newQuantity, item.itemId);
+          await stockUpdateService.createStockUpdate(
+            item.itemId,
+            newQuantity,
+            "adjustment"
+          );
         }
         const itemPrice = item.unitPrice - (item.unitPrice * discount) / 100;
         await insertOrderItem.run(

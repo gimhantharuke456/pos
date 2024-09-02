@@ -8,6 +8,7 @@ import {
   BarChartOutlined,
   DollarOutlined,
   SettingOutlined,
+  BackwardFilled,
 } from "@ant-design/icons";
 import SupplierManagement from "../pages/SupplierManagement";
 import ItemManagement from "../pages/ItemManagement";
@@ -18,6 +19,7 @@ import CustomerManagement from "../pages/CustomerManagement";
 import Orders from "../pages/Orders";
 import Reports from "./Reports";
 import Returns from "./Returns";
+import StockReport from "./StockReport";
 
 const { Sider, Content } = Layout;
 
@@ -104,6 +106,13 @@ const Dashboard = () => {
           >
             Returns
           </Menu.Item>
+          <Menu.Item
+            onClick={() => onMenuItemClick(10)}
+            key="10"
+            icon={<BackwardFilled />}
+          >
+            Stock Report
+          </Menu.Item>
         </Menu>
       </Sider>
       <Layout>
@@ -118,6 +127,7 @@ const Dashboard = () => {
             {activeIndex === 7 && <Orders />}
             {activeIndex === 8 && <Reports />}
             {activeIndex === 9 && <Returns />}
+            {activeIndex === 10 && <StockReport />}
           </div>
         </Content>
       </Layout>

@@ -228,7 +228,18 @@ CREATE TABLE IF NOT EXISTS orderItems (
       FOREIGN KEY (itemId) REFERENCES items(id)
     )
   `);
-
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS stockUpdates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      itemId INTEGER NOT NULL,
+      updatedQuantity INTEGER NOT NULL,
+      type TEXT CHECK(type IN ('adjustment', 'grn')) NOT NULL,
+      updateDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (itemId) REFERENCES items(id)
+    )
+  `);
   console.log("Database initialized");
   return db;
 };

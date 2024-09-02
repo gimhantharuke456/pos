@@ -9,6 +9,7 @@ const customerRoutes = require("./routes/customerRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const returnRoutes = require("./routes/returnsRoutes");
+const stockUpdateRoutes = require("./routes/stockUpdateRoutes");
 const app = express();
 
 app.use(cors());
@@ -21,7 +22,7 @@ app.use("/api/distribution", distributionRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/orders", orderRoutes);
-
+app.use("/api/stock-updates", stockUpdateRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/returns", returnRoutes);
 

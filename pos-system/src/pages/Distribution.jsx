@@ -15,6 +15,7 @@ import moment from "moment";
 import { PlusCircleFilled } from "@ant-design/icons";
 import distributionService from "../services/distributionService";
 import supplierService from "../services/supplierService";
+import stockUpdateService from "../services/stockUpdateService";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -171,7 +172,11 @@ const Distribution = () => {
               <Button
                 icon={<PlusCircleFilled />}
                 onClick={async () => {
-                  console.log(record.distributionId);
+                  await stockUpdateService.createStockUpdate({
+                    itemId: record.itemId,
+                    updatedQuantity: stockAmounts[record.id],
+                    type: "adjustment",
+                  });
                   await updateStockAmount(
                     record.distributionId,
                     stockAmounts[record.id]

@@ -2,6 +2,7 @@
 const initializeDb = require("../db/initializeDb");
 const { createDistribution } = require("./distributionService");
 const purchaseOrderModel = require("./purchaseOrderModel");
+const stockUpdateService = require("./stockUpdateService");
 
 const db = initializeDb();
 
@@ -147,6 +148,11 @@ const grnService = {
         const items = grn.items;
         for (var item of items) {
           await createDistribution(item.itemId, item.receivedQuantity);
+          await stockUpdateService.createStockUpdate(
+            item.itemId,
+            item.receivedQuantity,
+            "grn"
+          );
         }
         console.log("distributions added");
       } catch (err) {
