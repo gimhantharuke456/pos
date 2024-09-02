@@ -3,8 +3,10 @@
 # dependencies
 /node_modules
 /pos-system/node_modules
+/server/db/wholesaleSystem.sqlite
 /.pnp
 .pnp.js
+/server/db/wholesaleSystem.sqlite
 
 # testing
 /coverage
