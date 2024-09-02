@@ -149,6 +149,9 @@ const GrnReport = ({ grnId }) => {
         <Descriptions.Item label="Supplier Code">
           {grnData.supplierCode}
         </Descriptions.Item>
+  <Descriptions.Item label="Supplier Name">
+          {grnData.name}
+        </Descriptions.Item>
       </Descriptions>
       <Table
         columns={columns}

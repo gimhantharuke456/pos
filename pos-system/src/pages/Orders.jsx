@@ -9,6 +9,8 @@ import {
   Row,
   Col,
   Input,
+  Typography,
+  Divider,
 } from "antd";
 import orderService from "../services/orderService";
 import {
@@ -18,6 +20,8 @@ import {
 } from "@ant-design/icons";
 import moment from "moment";
 import OrderForm from "../components/ItemSelector";
+import supplierService from "../services/supplierService";
+const { Title } = Typography;
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -25,6 +29,7 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentOrder, setCurrentOrder] = useState(null);
+  const [order, setOrder] = useState(null);
   const [viewOrderItems, setViewOrderItems] = useState(null);
   const [updatePaidAmountModalVisible, setUpdatePaidAmountModalVisible] =
     useState(false);
@@ -33,13 +38,14 @@ const Orders = () => {
   const [newPaidAmount, setNewPaidAmount] = useState(0);
   const [customerCodeSearch, setCustomerCodeSearch] = useState("");
   const [orderCodeSearch, setOrderCodeSearch] = useState("");
+  const [supplier, setSupplier] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const data = await orderService.getAllOrders();
-        setOrders(data);
-        setFilteredOrders(data);
+        setOrders(data.reverse());
+        setFilteredOrders(data.reverse());
       } catch (error) {
         message.error("Failed to fetch orders");
       } finally {
@@ -106,6 +112,11 @@ const Orders = () => {
   };
 
   const showOrderItemsModal = (order) => {
+    setOrder(order);
+    setSupplier({
+      supplierName: order?.items[0]?.supplierName,
+      supplierCode: order?.items[0]?.supplierCode,
+    });
     setViewOrderItems(order.items);
   };
 
@@ -235,10 +246,14 @@ const Orders = () => {
   const totalBill = () => {
     if (viewOrderItems != null) {
       return viewOrderItems.reduce((total, item) => {
-        return total + item.quantity * item.itemPrice;
+        return total + item.quantity * item.unitPrice;
       }, 0);
     }
     return 0;
+  };
+
+  const discountedPrice = () => {
+    return (totalBill() / 100) * order?.discount;
   };
 
   return (
@@ -301,6 +316,14 @@ const Orders = () => {
         onCancel={() => setViewOrderItems(null)}
         footer={null}
       >
+        <Divider />
+        <h4>{`Customer Name : ${order?.customerName}`}</h4> <Divider />
+        <h4>{`Customer Code : ${order?.customerCode}`}</h4> <Divider />
+        <Divider />
+        <h4>{`Supplier Code : ${supplier?.supplierCode}`}</h4>
+        <Divider />
+        <h4>{`Supplier Name : ${supplier?.supplierName}`}</h4> <Divider />
+        <h4>{`Customer Invoice Date: ${order?.orderDate}`}</h4> <Divider />
         <Table
           columns={[
             {
@@ -309,13 +332,19 @@ const Orders = () => {
               key: "itemCode",
             },
             {
+              title: "Item Name",
+              dataIndex: "itemName",
+              key: "itemName",
+            },
+
+            {
               title: "Quantity",
               dataIndex: "quantity",
               key: "quantity",
             },
             {
               title: "Item Price",
-              dataIndex: "itemPrice",
+              dataIndex: "unitPrice",
               key: "itemPrice",
             },
             {
@@ -323,7 +352,7 @@ const Orders = () => {
               dataIndex: "itemPrice",
               key: "totalPrice",
               render: (text, record) => (
-                <>{record.itemPrice * record.quantity}</>
+                <>{record.unitPrice * record.quantity}</>
               ),
             },
           ]}
@@ -332,7 +361,13 @@ const Orders = () => {
           pagination={false}
         />
         <Row justify="end" style={{ marginTop: 20 }}>
-          <h1> {`Total Bill LKR : ${totalBill().toString()}`}</h1>
+          <h5> {`Retail Value LKR : ${totalBill().toString()}`}</h5>
+        </Row>
+        <Row justify="end" style={{ marginTop: 20 }}>
+          <h5>{`Discount ${order?.discount}% LKR: ${discountedPrice()}`}</h5>
+        </Row>{" "}
+        <Row justify="end" style={{ marginTop: 20 }}>
+          <h5> {`Total Bill LKR : ${totalBill() - discountedPrice()}`}</h5>
         </Row>
       </Modal>
     </div>

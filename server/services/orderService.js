@@ -46,8 +46,9 @@ const orderService = {
         const dItem = await distribution.all(item.id);
 
         if (dItem.length > 0) {
+          console.log("old quantity ", dItem[0].inStockAmount);
           const newQuantity = (dItem[0].inStockAmount ?? 0) - item.quantity;
-
+          console.log("newQuantity", newQuantity);
           await updateDistribution.run(newQuantity, item.itemId);
         }
         const itemPrice = item.unitPrice - (item.unitPrice * discount) / 100;
@@ -104,10 +105,11 @@ const orderService = {
     for (const order of orders) {
       order.items = await db
         .prepare(
-          `SELECT oi.*, i.* 
-           FROM orderItems oi 
-           JOIN items i ON oi.itemId = i.id 
-           WHERE oi.orderId = ?`
+          `SELECT oi.*, i.*, s.supplierCode, s.name AS supplierName
+             FROM orderItems oi 
+             JOIN items i ON oi.itemId = i.id 
+             JOIN suppliers s ON i.supplierId = s.id
+             WHERE oi.orderId = ?`
         )
         .all(order.id);
     }
