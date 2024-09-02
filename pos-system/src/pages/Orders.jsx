@@ -323,7 +323,11 @@ const Orders = () => {
         <h4>{`Supplier Code : ${supplier?.supplierCode}`}</h4>
         <Divider />
         <h4>{`Supplier Name : ${supplier?.supplierName}`}</h4> <Divider />
+<<<<<<< HEAD
         <h4>{`Customer Invoice Date: ${order?.orderDate}`}</h4> <Divider />
+=======
+        <h4>{`Order Date: ${order?.orderDate}`}</h4> <Divider />
+>>>>>>> c91a169c93243720e576143f0f854949870a18eb
         <Table
           columns={[
             {

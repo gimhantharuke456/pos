@@ -149,7 +149,11 @@ const GrnReport = ({ grnId }) => {
         <Descriptions.Item label="Supplier Code">
           {grnData.supplierCode}
         </Descriptions.Item>
+<<<<<<< HEAD
   <Descriptions.Item label="Supplier Name">
+=======
+        <Descriptions.Item label="Supplier Name">
+>>>>>>> c91a169c93243720e576143f0f854949870a18eb
           {grnData.name}
         </Descriptions.Item>
       </Descriptions>
